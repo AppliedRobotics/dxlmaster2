@@ -46,7 +46,7 @@ class DynamixelDevice
 	template<class T>
 	inline DynamixelStatus read(uint8_t aAddress, T& aData)
 	{
-		return mStatus=DxlMaster.read<T>(mID, aAddress, aData, mStatusReturnLevel);
+		return mStatus = DxlMaster.read<T>(mID, aAddress, aData, mStatusReturnLevel);
 	}
 	
 	inline DynamixelStatus read(uint8_t aAddress, uint8_t size, uint8_t *ptr)
@@ -64,14 +64,14 @@ class DynamixelDevice
 	{
 		return mStatus=DxlMaster.write(mID, aAddress, size, ptr, mStatusReturnLevel);
 	}
-	
-	template<class T>
-	inline DynamixelStatus regWrite(uint8_t aAddress, const T& aData)
-	{
-		return mStatus=DxlMaster.regWrite<T>(mID, aAddress, aData, mStatusReturnLevel);
-	}
-	
-	inline DynamixelStatus regWrite(uint8_t aAddress, uint8_t size, const uint8_t *ptr)
+
+    template <class T>
+    inline DynamixelStatus regWrite(uint8_t aAddress, const T &aData)
+    {
+        return mStatus = DxlMaster.regWrite<T>(mID, aAddress, aData, mStatusReturnLevel);
+    }
+
+    inline DynamixelStatus regWrite(uint8_t aAddress, uint8_t size, const uint8_t *ptr)
 	{
 		return mStatus=DxlMaster.regWrite(mID, aAddress, size, ptr, mStatusReturnLevel);
 	}

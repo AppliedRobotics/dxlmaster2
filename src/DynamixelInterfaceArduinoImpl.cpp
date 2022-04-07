@@ -1,6 +1,9 @@
 
 #include "DynamixelInterfaceArduinoImpl.h"
 
+#define DXL_LOBYTE(w) ((uint8_t)((w) & 0xff))
+#define DXL_HIBYTE(w) ((uint8_t)(((w) >> 8) & 0xff))
+
 // define TXEN, RXEN and RXCIE
 #if __AVR__
 #	if !defined(TXEN)
@@ -109,42 +112,46 @@ void DynamixelInterfaceImpl<T>::sendPacket(const DynamixelPacket &aPacket)
 {
 	mStream.flush();
 	writeMode();
+
 	// empty receive buffer, in case of a error in previous transaction
-	while(mStream.available())
+	while(mStream.available()) {
 		mStream.read();
+    }
+
 	mStream.write(0xFF);
 	mStream.write(0xFF);
+    mStream.write(0xFD);
+	mStream.write(0x00);
 	mStream.write(aPacket.mID);
-	mStream.write(aPacket.mLength);
+	mStream.write(DXL_LOBYTE(aPacket.mLength));
+    mStream.write(DXL_HIBYTE(aPacket.mLength));
 	mStream.write(aPacket.mInstruction);
-	uint8_t n=0;
-	if(aPacket.mAddress!=255)
-	{
+
+	uint16_t n = 0;
+
+	if (aPacket.mAddress != 255) {
 		mStream.write(aPacket.mAddress);
 		++n;
 	}
-	if(aPacket.mDataLength!=255)
-	{
+
+	if (aPacket.mDataLength != 255) {
 		mStream.write(aPacket.mDataLength);
 		++n;
 	}
-	if(aPacket.mLength>(2+n))
-	{
-		if(aPacket.mIDListSize==0)
-		{
-			mStream.write(aPacket.mData, aPacket.mLength-2-n);
-		}
-		else
-		{
-			uint8_t *ptr=aPacket.mData;
-			for(uint8_t i=0; i<aPacket.mIDListSize; ++i)
-			{
+
+	if (aPacket.mLength > (2 + n)) {
+		if (aPacket.mIDListSize == 0) {
+			mStream.write(aPacket.mData, aPacket.mLength - 2 - n);
+		} else {
+			uint8_t *ptr = aPacket.mData;
+			for (uint16_t i = 0; i < aPacket.mIDListSize; ++i) {
 				mStream.write(aPacket.mIDList[i]);
 				mStream.write(ptr, aPacket.mDataLength);
-				ptr+=aPacket.mDataLength;
+				ptr += aPacket.mDataLength;
 			}
 		}
 	}
+
 	mStream.write(aPacket.mCheckSum);
 	mStream.flush();
 	readMode();
