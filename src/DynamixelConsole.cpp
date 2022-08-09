@@ -13,96 +13,95 @@ const DynamixelCommand DynamixelConsole::sCommand[] =
 	};
 
 DynamixelConsole::DynamixelConsole(Stream &aConsole):
-mConsole(aConsole)
+    mConsole(aConsole)
 {
-	mLinePtr=&(mLineBuffer[0]);
-	mLineBuffer[sLineBufferSize]=0;
+	mLinePtr = &(mLineBuffer[0]);
+	mLineBuffer[sLineBufferSize] = 0;
 }
 
 void DynamixelConsole::loop()
 {
-	//empty input buffer
-	while(mConsole.available())
-		mConsole.read();
-	
-	//write new command prompt
-	mConsole.write(">");
-	
-	// read one command line
-	char c;
-	while((c=mConsole.read())!='\n' && c!='\r')
-	{
-		if(c>=32 && c<=126 && (mLinePtr-&(mLineBuffer[0]))<sLineBufferSize)
-		{
-			mConsole.write(c);
-			*mLinePtr=c;
-			++mLinePtr;
-		}
-		else if(c==8 && mLinePtr>(&(mLineBuffer[0])))
-		{
-			mConsole.write(c);
-			--mLinePtr;
-		}
-	}
-	//new line
-	mConsole.write("\n\r");
-	// run command
-	run();
-	// reset buffer
-	mLinePtr=&(mLineBuffer[0]);
+    // empty input buffer
+    while (mConsole.available())
+        mConsole.read();
+
+    // write new command prompt
+    mConsole.write(">");
+
+    // read one command line
+    char c;
+    while ((c = mConsole.read()) != '\n' && c != '\r')
+    {
+        if (c >= 32 && c <= 126 && ((size_t)(mLinePtr - mLineBuffer)) < sLineBufferSize)
+        {
+            mConsole.write(c);
+            *mLinePtr = c;
+            ++mLinePtr;
+        }
+        else if (c == 8 && mLinePtr > (&(mLineBuffer[0])))
+        {
+            mConsole.write(c);
+            --mLinePtr;
+        }
+    }
+    // new line
+    mConsole.write("\n\r");
+    // run command
+    run();
+    // reset buffer
+    mLinePtr = &(mLineBuffer[0]);
 }
 
 void DynamixelConsole::run()
 {
-	char *argv[16];
-	int argc=parseCmd(argv);
-	
-	if(strcmp(argv[0], "help")==0)
-	{
-		printHelp();
-	}
-	else
-	{
-		const int commandNumber=sizeof(sCommand)/sizeof(DynamixelCommand);
-		for(int i=0; i<commandNumber; ++i)
-		{
-			if(strcmp(argv[0],sCommand[i].mName)==0)
-			{
-				DynamixelStatus status=(this->*(sCommand[i].mCallback))(argc, argv);
-				printStatus(status);
-				break;
-			}
-		}
-	}
+    char *argv[16];
+    int argc = parseCmd(argv);
+
+    if (strcmp(argv[0], "help") == 0)
+    {
+        printHelp();
+    }
+    else
+    {
+        const int commandNumber = sizeof(sCommand) / sizeof(DynamixelCommand);
+        for (int i = 0; i < commandNumber; ++i)
+        {
+            if (strcmp(argv[0], sCommand[i].mName) == 0)
+            {
+                DynamixelStatus status = (this->*(sCommand[i].mCallback))(argc, argv);
+                printStatus(status);
+                break;
+            }
+        }
+    }
 }
 
 int DynamixelConsole::parseCmd(char **argv)
 {
-	int argc=0;
-	char *ptr=&mLineBuffer[0];
-	while(argc<15)
-	{
-		while(*ptr==' ' && ptr<mLinePtr)
-		{
-			++ptr;
-		}
-		if(ptr>=mLinePtr)
-		{
-			break;
-		}
-		argv[argc]=ptr;
-		while(*ptr!=' ' && ptr<mLinePtr)
-		{
-			++ptr;
-		}
-		*ptr='\0';
-		++ptr;
-		++argc;
-	}
-	argv[argc]=0;
-	return argc;
+    int argc = 0;
+    char *ptr = &mLineBuffer[0];
+    while (argc < 15)
+    {
+        while (*ptr == ' ' && ptr < mLinePtr)
+        {
+            ++ptr;
+        }
+        if (ptr >= mLinePtr)
+        {
+            break;
+        }
+        argv[argc] = ptr;
+        while (*ptr != ' ' && ptr < mLinePtr)
+        {
+            ++ptr;
+        }
+        *ptr = '\0';
+        ++ptr;
+        ++argc;
+    }
+    argv[argc] = 0;
+    return argc;
 }
-
 
 void DynamixelConsole::printStatus(DynamixelStatus aStatus)
 {

@@ -67,25 +67,22 @@ void DynamixelDevice::communicationSpeed(uint32_t aSpeed)
 
 DynamixelStatus DynamixelDevice::init()
 {
-  mStatusReturnLevel = 2;
-  DynamixelStatus status = ping();
-  if (status != DYN_STATUS_OK) {
-    return status;
-  }
-
-  uint8_t temp = 0;
-  status = read(DYN_ADDRESS_SRL, temp);
-
-  if (status == DYN_STATUS_OK && temp == 0) {
     mStatusReturnLevel = 2;
-  } else {
-    mStatusReturnLevel = temp;
-  }
- 
-  if (status & DYN_STATUS_TIMEOUT) {
-    mStatusReturnLevel = 0;
-  }
+    DynamixelStatus status = ping();
 
-  return DYN_STATUS_OK;
+    if (status != DYN_STATUS_OK)
+        return status;
+
+    uint8_t temp = 0;
+    status = read(DYN_ADDRESS_SRL, temp);
+
+    if (status == DYN_STATUS_OK && temp == 0)
+        mStatusReturnLevel = 2;
+    else
+        mStatusReturnLevel = temp;
+
+    if (status & DYN_STATUS_TIMEOUT)
+        mStatusReturnLevel = 0;
+
+    return DYN_STATUS_OK;
 }
-
