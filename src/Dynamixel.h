@@ -12,6 +12,9 @@
 #define DXL_LOBYTE(w) ((uint8_t)((w) & 0xff))
 #define DXL_HIBYTE(w) ((uint8_t)(((w) >> 8) & 0xff))
 
+#define DXL_LOBYTE(w) ((uint8_t)((w) & 0xff))
+#define DXL_HIBYTE(w) ((uint8_t)(((w) >> 8) & 0xff))
+
 /** \brief ID for broadcast */
 #define BROADCAST_ID 0xFE
 
@@ -317,6 +320,43 @@ struct DynamixelPacket
 	uint8_t checkSum();
 };
 
+
+/**
+ * \struct DynamixelPacket v2
+ * \brief Struct of a dynamixel packet (instruction or status)
+*/
+struct DynamixelPacket_v2
+{
+	DynamixelPacket_v2(){}
+    
+	/* note : allow to constuct from const data, but const_cast it 
+       (constness should be respected if code is correct) */
+    DynamixelPacket_v2(
+        uint8_t aID,
+        uint16_t aLength,
+        uint8_t aInstruction,
+        const uint8_t *aParams = NULL,
+        uint16_t aParamSize = 0,
+        uint16_t aAddress = NO_ADDRESS,
+        const uint8_t *aRxData = NULL,
+        uint16_t aRxDataSize = 0)
+        : mID(aID),
+          mTxLength(aLength),
+          mInstruction(aInstruction),
+          mParams(const_cast<uint8_t *>(aParams)),
+          mParamSize(aParamSize),
+          mAddress(aAddress),
+          mRxData((const_cast<uint8_t *>(aRxData))),
+          mRxDataLength(aRxDataSize)
+    {
+        mHead[0] = 0xFF;
+        mHead[1] = 0xFF;
+        mHead[2] = 0xFD;
+        mHead[3] = 0x00;
+        mHead[4] = mID;
+        mHead[5] = (DXL_LOBYTE(mTxLength));
+        mHead[6] = (DXL_HIBYTE(mTxLength));
+        mHead[7] = mInstruction;
 
 /**
  * \struct DynamixelPacket v2
