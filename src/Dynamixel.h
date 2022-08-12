@@ -9,8 +9,48 @@
 #include <stdint.h>
 #include <stdlib.h> 
 
+#define DXL_LOBYTE(w) ((uint8_t)((w) & 0xff))
+#define DXL_HIBYTE(w) ((uint8_t)(((w) >> 8) & 0xff))
+
 /** \brief ID for broadcast */
 #define BROADCAST_ID 0xFE
+
+#define NO_ADDRESS  0xFFFF
+#define NO_DATA     0xFFFF
+
+#define HEADERS_LEN  4
+#define ID_LEN       1
+#define LEN_LEN      2
+#define INST_LEN     1
+#define ERR_LEN      1
+#define CRC_LEN      2
+
+#define HEAD_LEN            (HEADERS_LEN + ID_LEN + LEN_LEN + INST_LEN)
+#define RX_HEAD_BUFF        (HEAD_LEN + ERR_LEN)
+#define TX_MIN_LENGTH       (INST_LEN + CRC_LEN)
+#define RX_MIN_LENGTH       (INST_LEN + ERR_LEN + CRC_LEN)
+
+#define PING_TX_PARAMS_LEN  0
+#define PING_TX_LENGTH      (TX_MIN_LENGTH + PING_TX_PARAMS_LEN)
+#define PING_RX_PARAMS_LEN  3
+#define PING_RX_LENGTH      (RX_MIN_LENGTH + PING_RX_PARAMS_LEN)
+
+#define READ_TX_PARAMS_LEN  4
+#define READ_TX_LENGTH      (TX_MIN_LENGTH + READ_TX_PARAMS_LEN)
+#define READ_RX_PARAMS_LEN  0
+#define READ_RX_LENGTH      (RX_MIN_LENGTH + READ_RX_PARAMS_LEN)
+
+#define WRITE_TX_PARAMS_LEN 2
+#define WRITE_TX_LENGTH     (TX_MIN_LENGTH + WRITE_TX_PARAMS_LEN)
+#define WRITE_RX_PARAM_LEN  0
+#define WRITE_RX_LENGTH     (RX_MIN_LENGTH + WRITE_RX_PARAM_LEN)
+
+#define WRITE_TX_PARAMS_LEN 2
+#define ACTIO_TX_LENGTH     (TX_MIN_LENGTH + WRITE_TX_PARAMS_LEN)
+#define WRITE_RX_PARAM_LEN  0
+#define ACTIO_RX_LENGTH     (RX_MIN_LENGTH + WRITE_RX_PARAM_LEN)
+
+
 
 /** \brief Type of dynamixel device ID */
 typedef uint8_t DynamixelID;
@@ -19,6 +59,13 @@ typedef uint8_t DynamixelStatus;
 /** \brief Type of dynamixel instructions */
 typedef uint8_t DynamixelInstruction;
 
+
+/** \brief Protocol version of dynamixel device ID */
+enum DynProtocol
+{
+    DYN_PROTOCOL_V1 = 0x01,
+	DYN_PROTOCOL_V2 = 0x02,
+};
 
 /**
  * \brief Dynamixel intruction values
@@ -41,6 +88,29 @@ enum DynInstruction
     DYN_BULK_READ	    = 0x92,
     DYN_BULK_WRITE	    = 0x93,
     DYN_FAST_BULK_READ	= 0x9A
+};
+
+/**
+ * \brief Dynamixel intruction values
+*/
+enum DynInstruction_v2
+{
+	INST_PING		    = 0x01,
+	INST_READ		    = 0x02,
+	INST_WRITE		    = 0x03,
+	INST_REG_WRITE	    = 0x04,
+	INST_ACTION		    = 0x05,
+	INST_RESET		    = 0x06,
+    INST_REBOOT		    = 0x08,
+    INST_CLEAR		    = 0x10,
+    INST_CTBACKUP	    = 0x20,
+    INST_RSTATUS	    = 0x55,
+    INST_SYNC_READ	    = 0x82,
+    INST_SYNC_WRITE	    = 0x83,
+    INST_FAST_SYNK_READ	= 0x8A,
+    INST_BULK_READ	    = 0x92,
+    INST_BULK_WRITE	    = 0x93,
+    INST_FAST_BULK_READ	= 0x9A
 };
 
 /**
@@ -73,6 +143,28 @@ enum DynStatus
 	DYN_STATUS_COM_ERROR			= 128,
 	DYN_STATUS_INTERNAL_ERROR		= 255
 };
+
+enum DynV2_Status
+{
+	DYN2_STATUS_OK	            = 0x00,
+	DYN2_STATUS_RESULT_FAIL	    = 0x01, // Failed to process the sent Instruction Packet
+	DYN2_STATUS_INSTRUCTION_ERR	= 0x02, // Undefined Instruction has been used, Action has been used without Reg Write
+	DYN2_STATUS_CRC_ERR	        = 0x03, // CRC of the sent Packet does not match
+	DYN2_STATUS_DATA_RANGE_ERR  = 0x04, // Data to be written in the corresponding Address is outside the range of the minimum/maximum value
+	DYN2_STATUS_DATA_LENGHT_ERR	= 0x05, // Attempt to write Data that is shorter than the data length of the corresponding Address
+	DYN2_STATUS_DATA_LIMIT_ERR	= 0x06, // Data to be written in the corresponding Address is outside of the Limit value
+	DYN2_STATUS_ACCESS_ERR	    = 0x07, // Attempt to read/write <> Write/Read Only or has not been defined or ROM lock
+
+    DYN2_STATUS_TIMEOUT	        = 0x81,
+    DYN2_STATUS_HEADERS_ERR	    = 0x82,
+    DYN2_STATUS_PACKET_ID_ERR	= 0x83,
+    DYN2_STATUS_PACKET_LEN_ERR	= 0x84,
+    DYN2_STATUS_PACKET_INST_ERR	= 0x85,
+    DYN2_STATUS_TIMEOUT_DATA	= 0x86,
+    DYN2_STATUS_TIMEOUT_CRC	    = 0x87,
+    DYN2_STATUS_PACKET_CRC_ERR	= 0x88,
+};
+
 
 /**
  * \brief Dynamixel control table addresses (only addresses used by all models)
@@ -174,72 +266,118 @@ enum DynModel
 */
 struct DynamixelPacket
 {
-	DynamixelPacket(){}
-    
-	/* note : allow to constuct from const data, but const_cast it 
-       (constness should be respected if code is correct) */
-	DynamixelPacket(
+    DynamixelPacket() {}
+    // note : allow to constuct from const data, but const_cast it (constness should be respected if code is correct)
+    DynamixelPacket(
         uint8_t aID, 
         uint8_t aInstruction, 
-        uint16_t aLength, 
+        uint8_t aLength, 
         const uint8_t *aData, 
         uint8_t aAddress = 255, 
-        uint16_t aDataLength = 0, 
+        uint8_t aDataLength = 255, 
         uint8_t aIDListSize = 0, 
-        const uint8_t *aIDList = NULL)
+        const uint8_t *aIDList = NULL) 
         : mID(aID), 
           mIDListSize(aIDListSize), 
-          mIDList(const_cast<uint8_t*>(aIDList)), 
+          mIDList(const_cast<uint8_t *>(aIDList)), 
           mLength(aLength), 
           mInstruction(aInstruction), 
           mAddress(aAddress), 
           mDataLength(aDataLength), 
-          mData(const_cast<uint8_t*>(aData))
-	{
-		mCheckSum = checkSum();
-	}
-	
-	/** \brief Packet ID */
-	DynamixelID mID;
+          mData(const_cast<uint8_t *>(aData))
+    {
+        mCheckSum = checkSum();
+    }
 
+    /** \brief Packet ID */
+	DynamixelID mID;
 	/** \brief ID list, used for sync write, set to 0 if not used */
 	uint8_t mIDListSize;
 	DynamixelID *mIDList;
-
 	/** \brief Packet length (full length)*/
-	uint16_t mLength;
-
+	uint8_t mLength;
 	/** \brief Packet instruction or status */
 	union{
 		DynamixelInstruction mInstruction;
 		DynamixelStatus mStatus;
 	};
-
 	/** \brief Address to read/write, set to 255 if not used */
 	uint8_t mAddress;
-
-	/** \brief Length of data to read/write, only needed for read and */
-	uint16_t mDataLength;
-
+	/** \brief Length of data to read/write, only needed for read and sync write, set to 255 if not used */
+	uint8_t mDataLength;
 	/** \brief Pointer to packet parameter (or NULL if no parameter) */
 	uint8_t *mData;
-    
 	/** \brief Packet checksum */
-	uint16_t mCheckSum;
+	uint8_t mCheckSum;
 	
 	/**
 	 * \brief Compute checksum of the packet
 	 * \return Checksum value
 	*/
-
-    uint16_t updateCRC(uint16_t crc_accum, uint8_t *data_blk_ptr, 
-                                           uint16_t data_blk_size);
+	uint8_t checkSum();
 };
 
 
+/**
+ * \struct DynamixelPacket v2
+ * \brief Struct of a dynamixel packet (instruction or status)
+*/
+struct DynamixelPacket_v2
+{
+	DynamixelPacket_v2(){}
+    
+	/* note : allow to constuct from const data, but const_cast it 
+       (constness should be respected if code is correct) */
+    DynamixelPacket_v2(
+        uint8_t aID,
+        uint16_t aLength,
+        uint8_t aInstruction,
+        const uint8_t *aParams = NULL,
+        uint16_t aParamSize = 0,
+        uint16_t aAddress = NO_ADDRESS,
+        const uint8_t *aRxData = NULL,
+        uint16_t aRxDataSize = 0)
+        : mID(aID),
+          mTxLength(aLength),
+          mInstruction(aInstruction),
+          mParams(const_cast<uint8_t *>(aParams)),
+          mParamSize(aParamSize),
+          mAddress(aAddress),
+          mRxData((const_cast<uint8_t *>(aRxData))),
+          mRxDataLength(aRxDataSize)
+    {
+        mHead[0] = 0xFF;
+        mHead[1] = 0xFF;
+        mHead[2] = 0xFD;
+        mHead[3] = 0x00;
+        mHead[4] = mID;
+        mHead[5] = (DXL_LOBYTE(mTxLength));
+        mHead[6] = (DXL_HIBYTE(mTxLength));
+        mHead[7] = mInstruction;
 
+        mCheckSum = updateCRC(0, mHead, HEAD_LEN);
+        mCheckSum = updateCRC(mCheckSum, mParams, mParamSize);
+    }
 
+    uint8_t mHead[HEAD_LEN];
+	DynamixelID mID;
+	uint16_t mTxLength;
+	union{
+		DynamixelInstruction mInstruction;
+		DynamixelStatus mStatus;
+	};
+	uint8_t *mParams;
+	uint16_t mParamSize;
+	uint16_t mAddress;
 
+	uint8_t *mRxData;
+	uint16_t mRxDataLength;
+
+	uint16_t mCheckSum;
+	
+    uint16_t updateCRC(uint16_t crc_accum, uint8_t *data_blk_ptr, 
+                                           uint16_t data_blk_size);
+
+};
 
 #endif
-

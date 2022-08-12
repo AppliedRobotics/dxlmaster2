@@ -3,7 +3,7 @@
 */
 
 #include "Dynamixel.h"
-/*
+
 uint8_t DynamixelPacket::checkSum()
 {
 	uint8_t result = mID + mLength + mInstruction;
@@ -19,7 +19,7 @@ uint8_t DynamixelPacket::checkSum()
 		++n;
 	}
 
-	for (uint16_t i = 0; i < (mLength - 2 - n - mIDListSize); ++i) {
+	for (uint16_t i = 0; i < (mLength - 2u - n - mIDListSize); ++i) {
 		result += mData[i];
 	}
 
@@ -29,11 +29,11 @@ uint8_t DynamixelPacket::checkSum()
 
 	return ~result;
 }
-*/
 
-uint16_t DynamixelPacket::updateCRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size)
+
+uint16_t DynamixelPacket_v2::updateCRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size)
 {
-    uint16_t i;
+    
     static const uint16_t crc_table[256] = {0x0000,
     0x8005, 0x800F, 0x000A, 0x801B, 0x001E, 0x0014, 0x8011,
     0x8033, 0x0036, 0x003C, 0x8039, 0x0028, 0x802D, 0x8027,
@@ -72,6 +72,8 @@ uint16_t DynamixelPacket::updateCRC(uint16_t crc_accum, uint8_t *data_blk_ptr, u
     0x8261, 0x0220, 0x8225, 0x822F, 0x022A, 0x823B, 0x023E,
     0x0234, 0x8231, 0x8213, 0x0216, 0x021C, 0x8219, 0x0208,
     0x820D, 0x8207, 0x0202 };
+
+    uint16_t i;
 
     for (uint16_t j = 0; j < data_blk_size; j++) {
         i = ((uint16_t)(crc_accum >> 8) ^ *data_blk_ptr++) & 0xFF;

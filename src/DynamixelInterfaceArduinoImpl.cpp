@@ -1,8 +1,4 @@
-
 #include "DynamixelInterfaceArduinoImpl.h"
-
-#define DXL_LOBYTE(w) ((uint8_t)((w) & 0xff))
-#define DXL_HIBYTE(w) ((uint8_t)(((w) >> 8) & 0xff))
 
 // define TXEN, RXEN and RXCIE
 #if __AVR__
@@ -41,7 +37,6 @@ HardwareDynamixelInterface DxlMaster(Serial1);
 HardwareDynamixelInterface DxlMaster(Serial);
 #endif
 
-
 template<class T>
 void DynamixelInterfaceImpl<T>::readMode()
 {
@@ -69,24 +64,25 @@ DynamixelInterfaceImpl<T>::DynamixelInterfaceImpl(T &aStream, uint8_t aTxPin):
 	pinMode(DXL_DIR_RXD_PIN, OUTPUT);
 }
 
-template<class T>
+template <class T>
 DynamixelInterfaceImpl<T>::~DynamixelInterfaceImpl()
 {
 }
-template<class T>
+
+template <class T>
 void DynamixelInterfaceImpl<T>::begin(unsigned long aBaud)
 {
-	#if defined(ESP32)
-	mStream.begin(115200);
-	#else
-	mStream.begin(aBaud);
-	#endif
+#if defined(ESP32)
+    mStream.begin(115200);
+#else
+    mStream.begin(aBaud);
+#endif
 
-	//mStream.write(0);
-	//Serial.println("Hello");
-	baud = aBaud;
-	mStream.setTimeout(3); //warning : response delay seems much higher than expected for some operation (eg writing eeprom)
-	readMode();
+    // mStream.write(0);
+    // Serial.println("Hello");
+    baud = aBaud;
+    mStream.setTimeout(3); // warning : response delay seems much higher than expected for some operation (eg writing eeprom)
+    readMode();
 }
 
 template<class T>
@@ -112,100 +108,181 @@ void DynamixelInterfaceImpl<T>::sendPacket(const DynamixelPacket &aPacket)
 {
 	mStream.flush();
 	writeMode();
-
 	// empty receive buffer, in case of a error in previous transaction
-	while(mStream.available()) {
+	while(mStream.available())
 		mStream.read();
-    }
-
 	mStream.write(0xFF);
 	mStream.write(0xFF);
-    mStream.write(0xFD);
-	mStream.write(0x00);
 	mStream.write(aPacket.mID);
-	mStream.write(DXL_LOBYTE(aPacket.mLength));
-    mStream.write(DXL_HIBYTE(aPacket.mLength));
+	mStream.write(aPacket.mLength);
 	mStream.write(aPacket.mInstruction);
-
-	uint16_t n = 0;
-
-	if (aPacket.mAddress != 255) {
+	uint8_t n=0;
+	if(aPacket.mAddress!=255)
+	{
 		mStream.write(aPacket.mAddress);
 		++n;
 	}
-
-	if (aPacket.mDataLength != 255) {
+	if(aPacket.mDataLength!=255)
+	{
 		mStream.write(aPacket.mDataLength);
 		++n;
 	}
-
-	if (aPacket.mLength > (2 + n)) {
-		if (aPacket.mIDListSize == 0) {
-			mStream.write(aPacket.mData, aPacket.mLength - 2 - n);
-		} else {
-			uint8_t *ptr = aPacket.mData;
-			for (uint16_t i = 0; i < aPacket.mIDListSize; ++i) {
+	if(aPacket.mLength>(n + 2U))
+	{
+		if(aPacket.mIDListSize==0)
+		{
+			mStream.write(aPacket.mData, aPacket.mLength-2-n);
+		}
+		else
+		{
+			uint8_t *ptr=aPacket.mData;
+			for(uint8_t i=0; i<aPacket.mIDListSize; ++i)
+			{
 				mStream.write(aPacket.mIDList[i]);
 				mStream.write(ptr, aPacket.mDataLength);
-				ptr += aPacket.mDataLength;
+				ptr+=aPacket.mDataLength;
 			}
 		}
 	}
-
 	mStream.write(aPacket.mCheckSum);
 	mStream.flush();
 	readMode();
 }
 
 template<class T>
+void DynamixelInterfaceImpl<T>::sendPacket_v2(DynamixelPacket_v2 &aPacket)
+{
+	mStream.flush();
+	writeMode();
+
+	// empty receive buffer, in case of a error in previous transaction
+	while(mStream.available()) {
+		mStream.read();
+    }
+
+    mStream.write(aPacket.mHead, HEAD_LEN);
+    mStream.write(aPacket.mParams, aPacket.mParamSize);
+    mStream.write(DXL_LOBYTE(aPacket.mCheckSum));
+    mStream.write(DXL_HIBYTE(aPacket.mCheckSum));
+
+	mStream.flush();
+   
+	readMode();
+}
+
+template <class T>
 void DynamixelInterfaceImpl<T>::receivePacket(DynamixelPacket &aPacket, uint8_t answerSize)
 {
-	static uint8_t buffer[3];
-	
-	aPacket.mIDListSize = 0;
-	aPacket.mAddress = 255;
-	aPacket.mDataLength = 255;
-	if (mStream.readBytes(buffer, 2)<2)
-	{
-		aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
-		return;
-	}
-	if (buffer[0] != 255 || buffer[1] != 255)
-	{
-		aPacket.mStatus = DYN_STATUS_COM_ERROR;
-		return;
-	}
-	if (mStream.readBytes(buffer, 3)<3)
-	{
-		aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
-		return;
-	}
-	if (aPacket.mID != buffer[0])
-	{
-		aPacket.mStatus = DYN_STATUS_COM_ERROR;
-		return;
-	}
-	aPacket.mLength = buffer[1];
-	if ((aPacket.mLength - 2) != answerSize)
-	{
-		aPacket.mStatus = DYN_STATUS_COM_ERROR;
-		return;
-	}
-	aPacket.mStatus = buffer[2];
-	if (aPacket.mLength>2 && (int)mStream.readBytes(reinterpret_cast<char*>(aPacket.mData), aPacket.mLength - 2)<(aPacket.mLength - 2))
-	{
-		aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
-		return;
-	}
-	if (mStream.readBytes(reinterpret_cast<char*>(&(aPacket.mCheckSum)), 1)<1)
-	{
-		aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
-		return;
-	}
-	if (aPacket.checkSum() != aPacket.mCheckSum)
-	{
-		aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_CHECKSUM_ERROR;
-	}
+    static uint8_t buffer[3];
+
+    aPacket.mIDListSize = 0;
+    aPacket.mAddress = 255;
+    aPacket.mDataLength = 255;
+    if (mStream.readBytes(buffer, 2) < 2)
+    {
+        aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
+        return;
+    }
+    if (buffer[0] != 255 || buffer[1] != 255)
+    {
+        aPacket.mStatus = DYN_STATUS_COM_ERROR;
+        return;
+    }
+    if (mStream.readBytes(buffer, 3) < 3)
+    {
+        aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
+        return;
+    }
+    if (aPacket.mID != buffer[0])
+    {
+        aPacket.mStatus = DYN_STATUS_COM_ERROR;
+        return;
+    }
+    aPacket.mLength = buffer[1];
+    if ((aPacket.mLength - 2) != answerSize)
+    {
+        aPacket.mStatus = DYN_STATUS_COM_ERROR;
+        return;
+    }
+    aPacket.mStatus = buffer[2];
+    if (aPacket.mLength > 2 
+        && (int)mStream.readBytes(reinterpret_cast<char *>(aPacket.mData), aPacket.mLength - 2) < (int)(aPacket.mLength - 2))
+    {
+        aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
+        return;
+    }
+    if (mStream.readBytes(reinterpret_cast<char *>(&(aPacket.mCheckSum)), 1) < 1)
+    {
+        aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
+        return;
+    }
+    if (aPacket.checkSum() != aPacket.mCheckSum)
+    {
+        aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_CHECKSUM_ERROR;
+    }
+}
+
+template <class T>
+void DynamixelInterfaceImpl<T>::receivePacket_v2(DynamixelPacket_v2 &aPacket, uint16_t answerSize)
+{   
+    uint8_t buffer[RX_HEAD_BUFF] = {0};
+   
+    if (mStream.readBytes(buffer, RX_HEAD_BUFF) < RX_HEAD_BUFF)
+    {
+        aPacket.mStatus = DYN2_STATUS_TIMEOUT;
+        return;
+    }
+
+    if (buffer[0] != 0xFF || buffer[1] != 0xFF || buffer[2] != 0xFD || buffer[3] != 0x00)
+    {
+        aPacket.mStatus = DYN2_STATUS_HEADERS_ERR;
+        return;
+    }
+
+    if (aPacket.mID != buffer[4])
+    {
+        aPacket.mStatus = DYN2_STATUS_PACKET_ID_ERR;
+        return;
+    }
+
+    uint16_t rxLength = buffer[5] | ((uint16_t)buffer[6] << 8);
+    if (rxLength != answerSize)
+    {
+        aPacket.mStatus = DYN2_STATUS_PACKET_LEN_ERR;
+        return;
+    }
+
+    if (0x55 != buffer[7])
+    {
+        aPacket.mStatus = DYN2_STATUS_PACKET_INST_ERR;
+        return;
+    }
+
+
+    aPacket.mStatus = buffer[8];
+
+    if (mStream.readBytes(aPacket.mRxData, aPacket.mRxDataLength) < aPacket.mRxDataLength)
+    {
+        aPacket.mStatus = DYN2_STATUS_TIMEOUT_DATA;
+        return;
+    }
+
+    aPacket.mCheckSum = aPacket.updateCRC(0, buffer, RX_HEAD_BUFF);
+    aPacket.mCheckSum = aPacket.updateCRC(aPacket.mCheckSum, aPacket.mRxData, aPacket.mRxDataLength);
+
+    
+    if (mStream.readBytes(buffer, CRC_LEN) < CRC_LEN)
+    {
+        aPacket.mStatus = DYN2_STATUS_TIMEOUT_CRC;
+        return;
+    }
+
+    if (aPacket.mCheckSum != (buffer[0] | ((uint16_t)buffer[1] << 8)))
+    {
+        aPacket.mStatus = DYN2_STATUS_PACKET_CRC_ERR;
+        return;
+    }
+
 }
 
 template<class T>
