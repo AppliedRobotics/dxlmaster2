@@ -48,11 +48,40 @@
 #define WRITE_RX_PARAM_LEN  0
 #define WRITE_RX_LENGTH     (RX_MIN_LENGTH + WRITE_RX_PARAM_LEN)
 
-#define WRITE_TX_PARAMS_LEN 2
-#define ACTIO_TX_LENGTH     (TX_MIN_LENGTH + WRITE_TX_PARAMS_LEN)
-#define WRITE_RX_PARAM_LEN  0
-#define ACTIO_RX_LENGTH     (RX_MIN_LENGTH + WRITE_RX_PARAM_LEN)
+#define ACTIO_TX_PARAMS_LEN 0
+#define ACTIO_TX_LENGTH     (TX_MIN_LENGTH + ACTIO_TX_PARAMS_LEN)
+#define ACTIO_RX_PARAM_LEN  0
+#define ACTIO_RX_LENGTH     (RX_MIN_LENGTH + ACTIO_RX_PARAM_LEN)
 
+#define RESET_TX_PARAMS_LEN 1
+#define RESET_TX_LENGTH     (TX_MIN_LENGTH + RESET_TX_PARAMS_LEN)
+#define RESET_RX_PARAM_LEN  0
+#define RESET_RX_LENGTH     (RX_MIN_LENGTH + RESET_RX_PARAM_LEN)
+
+#define REBOOT_TX_PARAMS_LEN 0
+#define REBOOT_TX_LENGTH     (TX_MIN_LENGTH + REBOOT_TX_PARAMS_LEN)
+#define REBOOT_RX_PARAM_LEN  0
+#define REBOOT_RX_LENGTH     (RX_MIN_LENGTH + REBOOT_RX_PARAM_LEN)
+
+#define CLEAR_TX_PARAMS_LEN 0
+#define CLEAR_TX_LENGTH     (TX_MIN_LENGTH + CLEAR_TX_PARAMS_LEN)
+#define CLEAR_RX_PARAM_LEN  0
+#define CLEAR_RX_LENGTH     (RX_MIN_LENGTH + CLEAR_RX_PARAM_LEN)
+
+#define BACKUP_TX_PARAMS_LEN 0
+#define BACKUP_TX_LENGTH     (TX_MIN_LENGTH + BACKUP_TX_PARAMS_LEN)
+#define BACKUP_RX_PARAM_LEN  0
+#define BACKUP_RX_LENGTH     (RX_MIN_LENGTH + BACKUP_RX_PARAM_LEN)
+
+#define SYNC_READ_TX_PARAMS_LEN 4
+#define SYNC_READ_TX_LENGTH     (TX_MIN_LENGTH + SYNC_READ_TX_PARAMS_LEN)
+#define SYNC_READ_RX_PARAM_LEN  4
+#define SYNC_READ_RX_LENGTH     (RX_MIN_LENGTH + SYNC_READ_RX_PARAM_LEN)
+
+#define SYNC_WRITE_TX_PARAMS_LEN 4
+#define SYNC_WRITE_TX_LENGTH     (TX_MIN_LENGTH + SYNC_WRITE_TX_PARAMS_LEN)
+#define SYNC_WRITE_RX_PARAM_LEN  4
+#define SYNC_WRITE_RX_LENGTH     (RX_MIN_LENGTH + SYNC_WRITE_RX_LENGTH)
 
 
 /** \brief Type of dynamixel device ID */
@@ -262,9 +291,8 @@ enum DynModel
 };
 
 
-
 /**
- * \struct DynamixelPacket
+ * \struct DynamixelPacket Protocol 2.0
  * \brief Struct of a dynamixel packet (instruction or status)
 */
 struct DynamixelPacket
@@ -320,9 +348,8 @@ struct DynamixelPacket
 	uint8_t checkSum();
 };
 
-
 /**
- * \struct DynamixelPacket v2
+ * \struct DynamixelPacket
  * \brief Struct of a dynamixel packet (instruction or status)
 */
 struct DynamixelPacket_v2
@@ -337,7 +364,7 @@ struct DynamixelPacket_v2
         uint8_t aInstruction,
         const uint8_t *aParams = NULL,
         uint16_t aParamSize = 0,
-        uint16_t aAddress = NO_ADDRESS,
+        /*uint16_t aAddress = NO_ADDRESS,*/
         const uint8_t *aRxData = NULL,
         uint16_t aRxDataSize = 0)
         : mID(aID),
@@ -345,44 +372,7 @@ struct DynamixelPacket_v2
           mInstruction(aInstruction),
           mParams(const_cast<uint8_t *>(aParams)),
           mParamSize(aParamSize),
-          mAddress(aAddress),
-          mRxData((const_cast<uint8_t *>(aRxData))),
-          mRxDataLength(aRxDataSize)
-    {
-        mHead[0] = 0xFF;
-        mHead[1] = 0xFF;
-        mHead[2] = 0xFD;
-        mHead[3] = 0x00;
-        mHead[4] = mID;
-        mHead[5] = (DXL_LOBYTE(mTxLength));
-        mHead[6] = (DXL_HIBYTE(mTxLength));
-        mHead[7] = mInstruction;
-
-/**
- * \struct DynamixelPacket v2
- * \brief Struct of a dynamixel packet (instruction or status)
-*/
-struct DynamixelPacket_v2
-{
-	DynamixelPacket_v2(){}
-    
-	/* note : allow to constuct from const data, but const_cast it 
-       (constness should be respected if code is correct) */
-    DynamixelPacket_v2(
-        uint8_t aID,
-        uint16_t aLength,
-        uint8_t aInstruction,
-        const uint8_t *aParams = NULL,
-        uint16_t aParamSize = 0,
-        uint16_t aAddress = NO_ADDRESS,
-        const uint8_t *aRxData = NULL,
-        uint16_t aRxDataSize = 0)
-        : mID(aID),
-          mTxLength(aLength),
-          mInstruction(aInstruction),
-          mParams(const_cast<uint8_t *>(aParams)),
-          mParamSize(aParamSize),
-          mAddress(aAddress),
+          /*mAddress(aAddress),*/
           mRxData((const_cast<uint8_t *>(aRxData))),
           mRxDataLength(aRxDataSize)
     {
@@ -408,7 +398,7 @@ struct DynamixelPacket_v2
 	};
 	uint8_t *mParams;
 	uint16_t mParamSize;
-	uint16_t mAddress;
+	/*uint16_t mAddress;*/
 
 	uint8_t *mRxData;
 	uint16_t mRxDataLength;

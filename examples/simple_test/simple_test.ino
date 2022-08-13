@@ -8,8 +8,6 @@
 #endif
 
 
-
-
 // Use broadcast address to affect all connected motors
 
 DynamixelDevice device(0x01);

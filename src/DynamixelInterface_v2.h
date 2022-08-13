@@ -21,6 +21,7 @@ public:
 
     void transaction(bool aExpectStatus, uint8_t answerSize = 0);
     void transaction_v2(bool aExpectStatus, uint16_t answerSize = 0);
+    void transaction_v2_loop(uint16_t count, uint16_t answerSize);
 
     template <class T>
     inline DynamixelStatus read(uint8_t aID, uint8_t aVer, uint16_t aAddress, T &aData, uint8_t aStatusReturnLevel = 2);
@@ -32,11 +33,16 @@ public:
     DynamixelStatus read(uint8_t aID, uint8_t aVer, uint16_t aAddress, uint16_t aRxSize, uint8_t *aRxBuf, uint8_t aStatusReturnLevel = 2);
     DynamixelStatus write(uint8_t aID, uint8_t aVer, uint16_t aAddress, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
     DynamixelStatus regWrite(uint8_t aID, uint8_t aVer, uint16_t aAddress, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
+    
+    DynamixelStatus syncRead(uint8_t aID, uint8_t aVer, uint16_t aAddress, uint16_t aLen, uint16_t aTxSize, const uint8_t *aTxBuf);
     DynamixelStatus syncWrite(uint8_t nID, const uint8_t *aID, uint8_t aVer, uint16_t aAddress, uint16_t aSize, const uint8_t *aPtr, uint8_t aStatusReturnLevel = 2);
     
     DynamixelStatus ping(uint8_t aID, uint8_t aVer, uint8_t *rxBuf);
     DynamixelStatus action(uint8_t aID, uint8_t aVer = BROADCAST_ID, uint8_t aStatusReturnLevel = 2);
-    DynamixelStatus reset(uint8_t aID, uint8_t aVer, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus reset(uint8_t aID, uint8_t aVer, uint8_t aLvl, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus reboot(uint8_t aID, uint8_t aVer, uint8_t aStatusReturnLevel);
+    DynamixelStatus clear(uint8_t aID, uint8_t aVer, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus backup(uint8_t aID, uint8_t aVer, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
 
 private:
     DynamixelPacket mPacket;
