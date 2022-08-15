@@ -29,7 +29,7 @@
 #define CRC_LEN      2
 
 #define HEAD_LEN            (HEADERS_LEN + ID_LEN + LEN_LEN + INST_LEN)
-#define RX_HEAD_BUFF        (HEAD_LEN + ERR_LEN)
+#define RX_HEAD_BUFF        (HEAD_LEN)
 #define TX_MIN_LENGTH       (INST_LEN + CRC_LEN)
 #define RX_MIN_LENGTH       (INST_LEN + ERR_LEN + CRC_LEN)
 
@@ -81,7 +81,12 @@
 #define SYNC_WRITE_TX_PARAMS_LEN 4
 #define SYNC_WRITE_TX_LENGTH     (TX_MIN_LENGTH + SYNC_WRITE_TX_PARAMS_LEN)
 #define SYNC_WRITE_RX_PARAM_LEN  4
-#define SYNC_WRITE_RX_LENGTH     (RX_MIN_LENGTH + SYNC_WRITE_RX_LENGTH)
+#define SYNC_WRITE_RX_LENGTH     (RX_MIN_LENGTH + SYNC_WRITE_RX_PARAM_LEN)
+
+#define FAST_SYNC_READ_TX_PARAMS_LEN 4
+#define FAST_SYNC_READ_TX_LENGTH     (TX_MIN_LENGTH + FAST_SYNC_READ_TX_PARAMS_LEN)
+#define FAST_SYNC_READ_RX_PARAM_LEN  4
+#define FAST_SYNC_READ_RX_LENGTH     (RX_MIN_LENGTH + FAST_SYNC_READ_RX_PARAM_LEN)
 
 
 /** \brief Type of dynamixel device ID */
@@ -97,6 +102,13 @@ enum DynProtocol
 {
     DYN_PROTOCOL_V1 = 0x01,
 	DYN_PROTOCOL_V2 = 0x02,
+};
+
+/** \brief Communication mode */
+enum CommMode
+{
+    RECEIVE_NORMAL = 0x00,
+	RECEIVE_FAST = 0x01,
 };
 
 /**
@@ -123,7 +135,7 @@ enum DynInstruction
 };
 
 /**
- * \brief Dynamixel intruction values
+ * \brief Dynamixel intruction values for V2
 */
 enum DynInstruction_v2
 {
@@ -192,9 +204,10 @@ enum DynV2_Status
     DYN2_STATUS_PACKET_ID_ERR	= 0x83,
     DYN2_STATUS_PACKET_LEN_ERR	= 0x84,
     DYN2_STATUS_PACKET_INST_ERR	= 0x85,
-    DYN2_STATUS_TIMEOUT_DATA	= 0x86,
-    DYN2_STATUS_TIMEOUT_CRC	    = 0x87,
-    DYN2_STATUS_PACKET_CRC_ERR	= 0x88,
+    DYN2_STATUS_TIMEOUT_ERR     = 0x86,
+    DYN2_STATUS_TIMEOUT_DATA	= 0x87,
+    DYN2_STATUS_TIMEOUT_CRC	    = 0x88,
+    DYN2_STATUS_PACKET_CRC_ERR	= 0x89,
 };
 
 
@@ -292,7 +305,7 @@ enum DynModel
 
 
 /**
- * \struct DynamixelPacket Protocol 2.0
+ * \struct DynamixelPacket Protocol 1.0
  * \brief Struct of a dynamixel packet (instruction or status)
 */
 struct DynamixelPacket
@@ -349,7 +362,7 @@ struct DynamixelPacket
 };
 
 /**
- * \struct DynamixelPacket
+ * \struct DynamixelPacket Protocol 2.0
  * \brief Struct of a dynamixel packet (instruction or status)
 */
 struct DynamixelPacket_v2
@@ -364,7 +377,6 @@ struct DynamixelPacket_v2
         uint8_t aInstruction,
         const uint8_t *aParams = NULL,
         uint16_t aParamSize = 0,
-        /*uint16_t aAddress = NO_ADDRESS,*/
         const uint8_t *aRxData = NULL,
         uint16_t aRxDataSize = 0)
         : mID(aID),
@@ -372,8 +384,7 @@ struct DynamixelPacket_v2
           mInstruction(aInstruction),
           mParams(const_cast<uint8_t *>(aParams)),
           mParamSize(aParamSize),
-          /*mAddress(aAddress),*/
-          mRxData((const_cast<uint8_t *>(aRxData))),
+          mRxData(const_cast<uint8_t *>(aRxData)),
           mRxDataLength(aRxDataSize)
     {
         mHead[0] = 0xFF;
@@ -398,7 +409,6 @@ struct DynamixelPacket_v2
 	};
 	uint8_t *mParams;
 	uint16_t mParamSize;
-	/*uint16_t mAddress;*/
 
 	uint8_t *mRxData;
 	uint16_t mRxDataLength;

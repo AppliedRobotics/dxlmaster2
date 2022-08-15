@@ -36,75 +36,83 @@ public:
     template <class T>
     inline DynamixelStatus read(uint16_t aAddress, T &aData)
     {
-        return mStatus = DxlMaster.read<T>(mID, mVer, aAddress, aData, mStatusReturnLevel);
+        return mStatus = DxlMaster.read<T>(mVer, mID, aAddress, aData, mStatusReturnLevel);
     }
 
     inline DynamixelStatus read(uint16_t aAddress, uint16_t size, uint8_t *ptr)
     {
-        return mStatus = DxlMaster.read(mID, mVer, aAddress, size, ptr, mStatusReturnLevel);
+        return mStatus = DxlMaster.read(mVer, mID, aAddress, size, ptr, mStatusReturnLevel);
     }
 
     template <class T>
     inline DynamixelStatus write(uint16_t aAddress, const T &aData)
     {
-        return mStatus = DxlMaster.write<T>(mID, mVer, aAddress, aData, mStatusReturnLevel);
+        return mStatus = DxlMaster.write<T>(mVer, mID, aAddress, aData, mStatusReturnLevel);
     }
 
     inline DynamixelStatus write(uint16_t aAddress, uint16_t size, const uint8_t *ptr)
     {
-        return mStatus = DxlMaster.write(mID, mVer, aAddress, size, ptr, mStatusReturnLevel);
+        return mStatus = DxlMaster.write(mVer, mID, aAddress, size, ptr, mStatusReturnLevel);
     }
 
     template <class T>
     inline DynamixelStatus regWrite(uint16_t aAddress, const T &aData)
     {
-        return mStatus = DxlMaster.regWrite<T>(mID, mVer, aAddress, aData, mStatusReturnLevel);
+        return mStatus = DxlMaster.regWrite<T>(mVer, mID, aAddress, aData, mStatusReturnLevel);
     }
 
     inline DynamixelStatus regWrite(uint16_t aAddress, uint16_t size, const uint8_t *ptr)
     {
-        return mStatus = DxlMaster.regWrite(mID, mVer, aAddress, size, ptr, mStatusReturnLevel);
+        return mStatus = DxlMaster.regWrite(mVer, mID, aAddress, size, ptr, mStatusReturnLevel);
     }
         
-    inline DynamixelStatus syncRead(uint16_t aAddress, uint16_t aLen, uint16_t size, const uint8_t *ptr)
+    inline DynamixelStatus syncRead(uint8_t nID, const uint8_t *aID, uint16_t aAddress, uint16_t aLen, uint8_t *rxPtr)
     {
-        return mStatus = DxlMaster.syncRead(BROADCAST_ID, mVer, aAddress, aLen, size, ptr);
+        return mStatus = DxlMaster.syncRead(mVer, nID, aID, aAddress, aLen, rxPtr);
     }
-/*
-    inline DynamixelStatus syncWrite(uint16_t aAddress, uint16_t aLen, uint16_t size, const uint8_t *ptr)
+
+    /**
+     * \brief Instruction to control multiple devices simultaneously using one Instruction Packet
+     * uint8_t IDs = 5 ;
+     * uint8_t dataLen = 4;
+     * uint8_t []
+     * The function wait for the packet to be completly sent (using Stream.flush)
+     */
+    inline DynamixelStatus syncWrite(uint8_t nID, const uint8_t *aID, uint16_t aAddress, uint16_t aSize, const uint8_t *ptr)
     {
-        return mStatus = DxlMaster.syncWrite(mID, mVer, aAddress, aLen, size, ptr, mStatusReturnLevel);
+        return mStatus = DxlMaster.syncWrite(mVer, nID, aID, aAddress, aSize, ptr);
+
     }
-*/
+    
 
     DynamixelStatus ping(uint8_t *buf = NULL)
     {
-        return mStatus = DxlMaster.ping(mID, mVer, buf);
+        return mStatus = DxlMaster.ping(mVer, mID, buf);
     }
 
     DynamixelStatus action(void)
     {
-        return mStatus = DxlMaster.action(mID, mVer, mStatusReturnLevel);
+        return mStatus = DxlMaster.action(mVer, BROADCAST_ID, mStatusReturnLevel);
     }
 
     DynamixelStatus reset(uint8_t alvl = 0xFF)
     {
-        return mStatus = DxlMaster.reset(mID, mVer, alvl, mStatusReturnLevel);
+        return mStatus = DxlMaster.reset(mVer, mID, alvl, mStatusReturnLevel);
     }
 
     DynamixelStatus reboot(void)
     {
-        return mStatus = DxlMaster.reboot(mID, mVer, mStatusReturnLevel);
+        return mStatus = DxlMaster.reboot(mVer, mID, mStatusReturnLevel);
     }
 
     DynamixelStatus clear(uint16_t aAddress, uint16_t size, const uint8_t *ptr)
     {
-        return mStatus = DxlMaster.clear(mID, mVer, size, ptr, mStatusReturnLevel);
+        return mStatus = DxlMaster.clear(mVer, mID, size, ptr, mStatusReturnLevel);
     }
 
     DynamixelStatus backup(uint16_t aAddress, uint16_t size, const uint8_t *ptr)
     {
-        return mStatus = DxlMaster.backup(mID, mVer, size, ptr, mStatusReturnLevel);
+        return mStatus = DxlMaster.backup(mVer, mID, size, ptr, mStatusReturnLevel);
     }
 
 

@@ -92,7 +92,7 @@ public:
      * Timeout depends of timeout of the underlying stream.
      * Return error code in case of communication error (timeout, checksum error, ...)
      */
-    void receivePacket_v2(DynamixelPacket_v2 &aPacket, uint16_t answerSize = 0);
+    void receivePacket_v2(DynamixelPacket_v2 &aPacket, uint16_t answerSize = 0 , uint8_t mode = RECEIVE_NORMAL);
 
     /**
      * \brief Stop interface

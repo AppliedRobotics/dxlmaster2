@@ -14,7 +14,7 @@ public:
     virtual void sendPacket(const DynamixelPacket &aPacket) = 0;
     virtual void sendPacket_v2(DynamixelPacket_v2 &aPacket) = 0;
     virtual void receivePacket(DynamixelPacket &aPacket, uint8_t answerSize = 0) = 0;
-    virtual void receivePacket_v2(DynamixelPacket_v2 &aPacket, uint16_t answerSize = 0) = 0;
+    virtual void receivePacket_v2(DynamixelPacket_v2 &aPacket, uint16_t answerSize = 0, uint8_t mode = 0) = 0;
     virtual void prepareTransaction() = 0;
     virtual void endTransaction() = 0;
     virtual void end() = 0;
@@ -24,25 +24,30 @@ public:
     void transaction_v2_loop(uint16_t count, uint16_t answerSize);
 
     template <class T>
-    inline DynamixelStatus read(uint8_t aID, uint8_t aVer, uint16_t aAddress, T &aData, uint8_t aStatusReturnLevel = 2);
+    inline DynamixelStatus read(uint8_t aVer, uint8_t aID,  uint16_t aAddress, T &aData, uint8_t aStatusReturnLevel = 2);
     template <class T>
-    inline DynamixelStatus write(uint8_t aID, uint8_t aVer, uint16_t aAddress, const T &aData, uint8_t aStatusReturnLevel = 2);
+    inline DynamixelStatus write(uint8_t aVer, uint8_t aID, uint16_t aAddress, const T &aData, uint8_t aStatusReturnLevel = 2);
     template <class T>
-    inline DynamixelStatus regWrite(uint8_t aID, uint8_t aVer, uint16_t aAddress, const T &aData, uint8_t aStatusReturnLevel = 2);
+    inline DynamixelStatus regWrite(uint8_t aVer, uint8_t aID, uint16_t aAddress, const T &aData, uint8_t aStatusReturnLevel = 2);
 
-    DynamixelStatus read(uint8_t aID, uint8_t aVer, uint16_t aAddress, uint16_t aRxSize, uint8_t *aRxBuf, uint8_t aStatusReturnLevel = 2);
-    DynamixelStatus write(uint8_t aID, uint8_t aVer, uint16_t aAddress, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
-    DynamixelStatus regWrite(uint8_t aID, uint8_t aVer, uint16_t aAddress, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
+    inline DynamixelStatus read(uint8_t aID, uint16_t aAddress, uint8_t aSize, uint8_t *aData, uint8_t aStatusReturnLevel = 2);
+    inline DynamixelStatus write(uint8_t aID, uint16_t aAddress, uint8_t aSize, uint8_t *aData, uint8_t aStatusReturnLevel = 2);
+
+    DynamixelStatus read(uint8_t aVer, uint8_t aID, uint16_t aAddress, uint16_t aRxSize, uint8_t *aRxBuf, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus write(uint8_t aVer, uint8_t aID, uint16_t aAddress, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus regWrite(uint8_t aVer, uint8_t aID, uint16_t aAddress, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
     
-    DynamixelStatus syncRead(uint8_t aID, uint8_t aVer, uint16_t aAddress, uint16_t aLen, uint16_t aTxSize, const uint8_t *aTxBuf);
-    DynamixelStatus syncWrite(uint8_t nID, const uint8_t *aID, uint8_t aVer, uint16_t aAddress, uint16_t aSize, const uint8_t *aPtr, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus syncRead(uint8_t aVer, uint8_t nID, const uint8_t *aID, uint16_t aAddress, uint16_t aSize, uint8_t *aRxBuf);
+    DynamixelStatus syncWrite(uint8_t aVer, uint8_t nID, const uint8_t *aID, uint16_t aAddress, uint16_t aSize, const uint8_t *aTxBuf);
+
+    DynamixelStatus fastSyncRead(uint8_t aVer, uint8_t aID, uint16_t aAddress, uint16_t aLen, uint16_t nID, const uint8_t *aIdBuf);
     
-    DynamixelStatus ping(uint8_t aID, uint8_t aVer, uint8_t *rxBuf);
-    DynamixelStatus action(uint8_t aID, uint8_t aVer = BROADCAST_ID, uint8_t aStatusReturnLevel = 2);
-    DynamixelStatus reset(uint8_t aID, uint8_t aVer, uint8_t aLvl, uint8_t aStatusReturnLevel = 2);
-    DynamixelStatus reboot(uint8_t aID, uint8_t aVer, uint8_t aStatusReturnLevel);
-    DynamixelStatus clear(uint8_t aID, uint8_t aVer, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
-    DynamixelStatus backup(uint8_t aID, uint8_t aVer, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus ping(uint8_t aVer, uint8_t aID, uint8_t *rxBuf);
+    DynamixelStatus action(uint8_t aVer, uint8_t aID, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus reset(uint8_t aVer, uint8_t aID, uint8_t aLvl, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus reboot(uint8_t aVer, uint8_t aID, uint8_t aStatusReturnLevel);
+    DynamixelStatus clear(uint8_t aVer, uint8_t aID, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus backup(uint8_t aVer, uint8_t aID, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
 
 private:
     DynamixelPacket mPacket;
@@ -51,22 +56,35 @@ private:
 
 
 template <class T>
-DynamixelStatus DynamixelInterface::read(uint8_t aID, uint8_t aVer, uint16_t aAddress, T &aData, uint8_t aStatusReturnLevel)
+DynamixelStatus DynamixelInterface::read(uint8_t aVer, uint8_t aID, uint16_t aAddress, T &aData, uint8_t aStatusReturnLevel)
 {
-    return read(aID, aVer, aAddress, uint16_t(sizeof(T)), (uint8_t *)&aData, aStatusReturnLevel);
+    return read(aVer, aID, aAddress, uint16_t(sizeof(T)), (uint8_t *)&aData, aStatusReturnLevel);
 }
 
 template <class T>
-DynamixelStatus DynamixelInterface::write(uint8_t aID, uint8_t aVer, uint16_t aAddress, const T &aData, uint8_t aStatusReturnLevel)
+DynamixelStatus DynamixelInterface::write(uint8_t aVer, uint8_t aID, uint16_t aAddress, const T &aData, uint8_t aStatusReturnLevel)
 {
-    return write(aID, aVer, aAddress, uint16_t(sizeof(T)), (const uint8_t *)&aData, aStatusReturnLevel);
+    return write(aVer, aID, aAddress, uint16_t(sizeof(T)), (const uint8_t *)&aData, aStatusReturnLevel);
 }
 
 template <class T>
-DynamixelStatus DynamixelInterface::regWrite(uint8_t aID, uint8_t aVer, uint16_t aAddress, const T &aData, uint8_t aStatusReturnLevel)
+DynamixelStatus DynamixelInterface::regWrite(uint8_t aVer, uint8_t aID, uint16_t aAddress, const T &aData, uint8_t aStatusReturnLevel)
 {
-    return regWrite(aID, aVer, aAddress, uint16_t(sizeof(T)), (const uint8_t *)&aData, aStatusReturnLevel);
+    return regWrite(aVer, aID, aAddress, uint16_t(sizeof(T)), (const uint8_t *)&aData, aStatusReturnLevel);
 }
+
+
+inline DynamixelStatus DynamixelInterface::read(uint8_t aID, uint16_t aAddress, uint8_t aSize, uint8_t *aData, uint8_t aStatusReturnLevel)
+{
+    return read(0x01, aID, aAddress, aSize, aData, aStatusReturnLevel);
+}
+
+inline DynamixelStatus DynamixelInterface::write(uint8_t aID, uint16_t aAddress, uint8_t aSize, uint8_t *aData, uint8_t aStatusReturnLevel)
+{
+    return write(0x01, aID, aAddress, aSize, aData, aStatusReturnLevel);
+}
+
+
 
 
 #if defined(ARDUINO)
