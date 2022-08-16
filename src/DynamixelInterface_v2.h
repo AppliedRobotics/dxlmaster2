@@ -43,9 +43,9 @@ public:
     DynamixelStatus bulkRead(uint8_t aVer, uint8_t nID, const uint8_t *aTxBuf, uint16_t aSize, uint8_t *aRxBuf);
     DynamixelStatus bulkWrite(uint8_t aVer, uint8_t nID, uint16_t aTxSize, const uint8_t *aTxBuf);
     
-    DynamixelStatus ping(uint8_t aVer, uint8_t aID, uint8_t *rxBuf);
+    DynamixelStatus ping(uint8_t aVer, uint8_t aID, uint8_t *rxBuf = NULL);
     DynamixelStatus action(uint8_t aVer, uint8_t aID, uint8_t aStatusReturnLevel = 2);
-    DynamixelStatus reset(uint8_t aVer, uint8_t aID, uint8_t aLvl, uint8_t aStatusReturnLevel = 2);
+    DynamixelStatus reset(uint8_t aVer, uint8_t aID, uint8_t aLvl = 0xff, uint8_t aStatusReturnLevel = 2);
     DynamixelStatus reboot(uint8_t aVer, uint8_t aID, uint8_t aStatusReturnLevel);
     DynamixelStatus clear(uint8_t aVer, uint8_t aID, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);
     DynamixelStatus backup(uint8_t aVer, uint8_t aID, uint16_t aTxSize, const uint8_t *aTxBuf, uint8_t aStatusReturnLevel = 2);

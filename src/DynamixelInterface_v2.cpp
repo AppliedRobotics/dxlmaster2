@@ -34,20 +34,6 @@ void DynamixelInterface::transaction_v2(bool aExpectStatus, uint16_t answerSize)
     endTransaction();
 }
 
-void DynamixelInterface::transaction_v2_loop(uint16_t count, uint16_t answerSize)
-{
-    prepareTransaction();
-    sendPacket_v2(mPacket_v2);
-
-    for (size_t i = 0; i < count; i++)
-    {
-        receivePacket_v2(mPacket_v2, answerSize);
-    }
-    
-    endTransaction();
-}
-
-
 
 /**
  *  Ping (0x01)
