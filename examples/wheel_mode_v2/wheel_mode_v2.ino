@@ -1,13 +1,6 @@
 // Test motor wheel mode
-#define VERSION 2
 
-#if VERSION == 1
-    #include "DxlMaster.h"
-#else
-    #include "DxlMaster_v2.h"
-#endif
-
-
+#include "DxlMaster_v2.h"
 
 // id of the motor
 const uint8_t id = 1;
@@ -16,7 +9,9 @@ int16_t speed = 200;
 // communication baudrate
 const long unsigned int baudrate = 57600;
 
-DynamixelMotor motor(id);
+uint8_t led_state = true;
+
+DynamixelMotor motor(id, 2);
 
 void setup() 
 {
@@ -25,30 +20,33 @@ void setup()
     Serial.println("Hello!");
     delay(100);
 
-
-    // check if we can communicate with the motor
-    // if not, we stop here
-    uint8_t status = motor.init();
-    if (status != DYN_STATUS_OK) {
-        while (1) {
-            Serial.println(motor.init());
-            delay(100);
-        }
+    uint8_t buf[3];
+    uint8_t status;
+    status = motor.ping(buf);
+    uint16_t num = buf[0] | (buf[1] << 8); 
+    if (status == DYN_STATUS_OK) {
+        Serial.print("\tOk!");
+        Serial.print(" Number: ");
+        Serial.print(num, HEX);
+        Serial.print(" Version: ");
+        Serial.print(buf[2], HEX);
     }
+    else {
+        Serial.print("\tErr!");
+    }
+    Serial.println(" Status = " + String(status));
 
-    motor.enableTorque(); 
-    motor.wheelMode(); 
 
-    //write(DYN_ADDRESS_ENABLE_TORQUE, uint8_t(aTorque?1:0));
-   
-    //uint32_t data= (aCWLimit | (uint32_t(aCCWLimit)<<16));
-	//write(DYN_ADDRESS_CW_LIMIT, data);
+    motor.enableTorque(0); 
+    motor.write(DYN2_ADDR_OPERATION_MODE, (uint8_t)1); 
+    motor.enableTorque(1); 
 }
 
-//change motion direction every 5 seconds
-void loop() {
-    Serial.println("Loop..");
+void loop() 
+{
     motor.speed(speed);
     speed = -speed;
+    motor.write(DYN2_ADDR_LED, (uint8_t)led_state);
+    led_state = !led_state;
     delay(3000);
 }

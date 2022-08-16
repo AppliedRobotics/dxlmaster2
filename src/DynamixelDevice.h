@@ -13,7 +13,6 @@ extern HardwareDynamixelInterface DxlMaster;
 class DynamixelDevice
 {
 public:
-
     DynamixelDevice(DynamixelID aId, uint8_t aVersion = DYN_PROTOCOL_V1);
 
     DynamixelStatus init(void);
@@ -122,12 +121,10 @@ public:
         return mStatus = DxlMaster.backup(mVer, mID, size, ptr, mStatusReturnLevel);
     }
 
-
-
+    uint8_t mVer;
 
 private:
     DynamixelID mID;
-    uint8_t mVer;
     uint8_t mStatusReturnLevel;
     DynamixelStatus mStatus;
 };

@@ -283,6 +283,22 @@ enum DynMotorAddress
 	DYN_ADDRESS_MOVING		    = 0x2E
 };
 
+enum Dyn_ver2_MotorAddress
+{
+    DYN2_ADDR_OPERATION_MODE	= 11,
+    DYN2_ADDR_MAX_POS_LIMIT		= 48,
+	DYN2_ADDR_MIN_POS_LIMIT		= 52,
+
+	DYN2_ADDR_ENABLE_TORQUE	    = 64,
+	DYN2_ADDR_LED			    = 65,
+
+	DYN2_ADDR_GOAL_SPEED		= 104,
+	DYN2_ADDR_GOAL_POSITION	    = 116,
+    DYN2_ADDR_MOVING		    = 122,
+	DYN2_ADDR_CURRENT_POSITION  = 132,
+
+};
+
 /**
  * \brief Dynamixel model number values
 */

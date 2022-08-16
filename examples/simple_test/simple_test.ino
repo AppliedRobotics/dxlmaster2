@@ -234,36 +234,7 @@ void loop()
     Serial.print(" Status = ");
     Serial.println(status);
 
-
-
-
-
-
-    //Serial.println(device.write(65, 1, &led_state));
-    //status = DxlMaster.write_v2(1, (uint16_t)65, 1, &led_state, 2);
-
-    //uint8_t xxx[25];
-    //status = device.read(1, 25, xxx);
-    //Serial.println(status);
-
     
     delay(5000);
 }
 
-/*
-DynamixelDevice device(0x01);
-
-void setup() {
-    DxlMaster.begin(57600);
-    Serial.begin(57600);
-    device.init();
-    device.write(13,2); // смена протокола
-    delay(100);
-}
-
-void loop() {
-    const uint8_t address = 24;
-    const uint8_t size = 10;
-    uint8_t buffer[size];
-    device.read_v2(address, buffer);
-}*/
