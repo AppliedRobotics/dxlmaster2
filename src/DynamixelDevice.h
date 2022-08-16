@@ -71,19 +71,26 @@ public:
         return mStatus = DxlMaster.syncRead(mVer, nID, aID, aAddress, aLen, rxPtr);
     }
 
-    /**
-     * \brief Instruction to control multiple devices simultaneously using one Instruction Packet
-     * uint8_t IDs = 5 ;
-     * uint8_t dataLen = 4;
-     * uint8_t []
-     * The function wait for the packet to be completly sent (using Stream.flush)
-     */
     inline DynamixelStatus syncWrite(uint8_t nID, const uint8_t *aID, uint16_t aAddress, uint16_t aSize, const uint8_t *ptr)
     {
         return mStatus = DxlMaster.syncWrite(mVer, nID, aID, aAddress, aSize, ptr);
-
     }
-    
+
+    inline DynamixelStatus fastSyncRead(uint8_t nID, const uint8_t *aID, uint16_t aAddress, uint16_t aLen, uint8_t *rxPtr)
+    {
+        return mStatus = DxlMaster.fastSyncRead(mVer, nID, aID, aAddress, aLen, rxPtr);
+    }
+
+    inline DynamixelStatus bulkRead(uint8_t nID, const uint8_t *aTxBuf, uint16_t aTxBufLen, uint8_t *rxPtr)
+    {
+        return mStatus = DxlMaster.bulkRead(mVer, nID, aTxBuf, aTxBufLen, rxPtr);
+    }
+
+    inline DynamixelStatus bulkWrite(uint8_t nID, const uint8_t *aTxBuf, uint16_t aSize)
+    {
+        return mStatus = DxlMaster.bulkWrite(mVer, nID, aSize, aTxBuf);
+    }
+
 
     DynamixelStatus ping(uint8_t *buf = NULL)
     {
@@ -105,12 +112,12 @@ public:
         return mStatus = DxlMaster.reboot(mVer, mID, mStatusReturnLevel);
     }
 
-    DynamixelStatus clear(uint16_t aAddress, uint16_t size, const uint8_t *ptr)
+    DynamixelStatus clear(uint16_t aSize, const uint8_t *aPtr)
     {
-        return mStatus = DxlMaster.clear(mVer, mID, size, ptr, mStatusReturnLevel);
+        return mStatus = DxlMaster.clear(mVer, mID, aSize, aPtr, mStatusReturnLevel);
     }
 
-    DynamixelStatus backup(uint16_t aAddress, uint16_t size, const uint8_t *ptr)
+    DynamixelStatus backup(uint16_t size, const uint8_t *ptr)
     {
         return mStatus = DxlMaster.backup(mVer, mID, size, ptr, mStatusReturnLevel);
     }
