@@ -31,7 +31,7 @@ uint8_t DynamixelPacket::checkSum()
 }
 
 
-uint16_t DynamixelPacket_v2::updateCRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size)
+uint16_t DynamixelPacket2::updateCRC(uint16_t crc_accum, uint8_t *data_blk_ptr, uint16_t data_blk_size)
 {
     
     static const uint16_t crc_table[256] = {0x0000,

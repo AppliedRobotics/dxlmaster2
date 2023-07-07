@@ -1,8 +1,8 @@
 /*
- * DynamixelInterface_v2.cpp
+ * DynamixelInterface2.cpp
  */
 
-#include "DynamixelInterface_v2.h"
+#include "DynamixelInterface2.h"
 
 void DynamixelInterface::transaction(bool aExpectStatus, uint8_t answerSize)
 {
@@ -21,15 +21,15 @@ void DynamixelInterface::transaction(bool aExpectStatus, uint8_t answerSize)
     endTransaction();
 }
 
-void DynamixelInterface::transaction_v2(bool aExpectStatus, uint16_t answerSize)
+void DynamixelInterface::transaction2(bool aExpectStatus, uint16_t answerSize)
 {
     prepareTransaction();
-    sendPacket_v2(mPacket_v2);
+    sendPacket2(mPacket2);
 
     if (aExpectStatus)
-        receivePacket_v2(mPacket_v2, answerSize);
+        receivePacket2(mPacket2, answerSize);
     else
-        mPacket_v2.mStatus = DYN2_STATUS_OK;
+        mPacket2.mStatus = DYN2_STATUS_OK;
 
     endTransaction();
 }
@@ -52,11 +52,11 @@ DynamixelStatus DynamixelInterface::ping(uint8_t aVer, uint8_t aID, uint8_t *rxB
         if (rxBuf == NULL) 
             rxBuf = temp;
         
-        mPacket_v2 = DynamixelPacket_v2(aID, PING_TX_LENGTH, INST_PING);
-        mPacket_v2.mRxData = rxBuf;
-        mPacket_v2.mRxDataLength = PING_RX_PARAMS_LEN;
-        transaction_v2(true, PING_RX_LENGTH);
-        return mPacket_v2.mStatus;
+        mPacket2 = DynamixelPacket2(aID, PING_TX_LENGTH, INST_PING);
+        mPacket2.mRxData = rxBuf;
+        mPacket2.mRxDataLength = PING_RX_PARAMS_LEN;
+        transaction2(true, PING_RX_LENGTH);
+        return mPacket2.mStatus;
     }
 }
 
@@ -85,10 +85,10 @@ DynamixelStatus DynamixelInterface::read(
         params[2] = (DXL_LOBYTE(aRxSize));
         params[3] = (DXL_HIBYTE(aRxSize));
 
-        mPacket_v2 = DynamixelPacket_v2(aID, READ_TX_LENGTH, INST_READ, params, READ_TX_PARAMS_LEN, /*aAddress,*/ aRxBuf, aRxSize);
-        transaction_v2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, READ_RX_LENGTH + aRxSize);
+        mPacket2 = DynamixelPacket2(aID, READ_TX_LENGTH, INST_READ, params, READ_TX_PARAMS_LEN, /*aAddress,*/ aRxBuf, aRxSize);
+        transaction2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, READ_RX_LENGTH + aRxSize);
         free(params);
-        return mPacket_v2.mStatus;
+        return mPacket2.mStatus;
     }
 }
 
@@ -118,11 +118,11 @@ DynamixelStatus DynamixelInterface::write(
         
         memcpy(&params[WRITE_TX_PARAMS_LEN], aTxBuf, aTxSize);
 
-        mPacket_v2 = DynamixelPacket_v2(aID, WRITE_TX_LENGTH + aTxSize, INST_WRITE, params, params_size/*, aAddress*/);
+        mPacket2 = DynamixelPacket2(aID, WRITE_TX_LENGTH + aTxSize, INST_WRITE, params, params_size/*, aAddress*/);
 
-        transaction_v2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, WRITE_RX_LENGTH);
+        transaction2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, WRITE_RX_LENGTH);
         free(params);
-        return mPacket_v2.mStatus;
+        return mPacket2.mStatus;
     }
 }
 
@@ -152,11 +152,11 @@ DynamixelStatus DynamixelInterface::regWrite(
         
         memcpy(&params[WRITE_TX_PARAMS_LEN], aTxBuf, aTxSize);
 
-        mPacket_v2 = DynamixelPacket_v2(aID, WRITE_TX_LENGTH + aTxSize, INST_REG_WRITE, params, params_size/*, aAddress*/);
+        mPacket2 = DynamixelPacket2(aID, WRITE_TX_LENGTH + aTxSize, INST_REG_WRITE, params, params_size/*, aAddress*/);
 
-        transaction_v2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, WRITE_RX_LENGTH);
+        transaction2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, WRITE_RX_LENGTH);
         free(params);
-        return mPacket_v2.mStatus;
+        return mPacket2.mStatus;
     }
 }
 
@@ -173,9 +173,9 @@ DynamixelStatus DynamixelInterface::action(uint8_t aVer, uint8_t aID, uint8_t aS
     }
     else
     {
-        mPacket_v2 = DynamixelPacket_v2(aID, ACTIO_TX_LENGTH, INST_ACTION);
-        transaction_v2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, ACTIO_RX_LENGTH);
-        return mPacket_v2.mStatus;
+        mPacket2 = DynamixelPacket2(aID, ACTIO_TX_LENGTH, INST_ACTION);
+        transaction2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, ACTIO_RX_LENGTH);
+        return mPacket2.mStatus;
     }
 }
 
@@ -193,9 +193,9 @@ DynamixelStatus DynamixelInterface::reset(uint8_t aVer, uint8_t aID, uint8_t aLv
     else
     {
         uint8_t level = aLvl;
-        mPacket_v2 = DynamixelPacket_v2(aID, RESET_TX_LENGTH, INST_RESET, &level, 1);
-        transaction_v2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, RESET_RX_LENGTH);
-        return mPacket_v2.mStatus;
+        mPacket2 = DynamixelPacket2(aID, RESET_TX_LENGTH, INST_RESET, &level, 1);
+        transaction2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, RESET_RX_LENGTH);
+        return mPacket2.mStatus;
     }
 }
 
@@ -212,9 +212,9 @@ DynamixelStatus DynamixelInterface::reboot(uint8_t aVer, uint8_t aID,  uint8_t a
     }
     else
     {
-        mPacket_v2 = DynamixelPacket_v2(aID, REBOOT_TX_LENGTH, INST_REBOOT);
-        transaction_v2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, REBOOT_RX_LENGTH);
-        return mPacket_v2.mStatus;
+        mPacket2 = DynamixelPacket2(aID, REBOOT_TX_LENGTH, INST_REBOOT);
+        transaction2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, REBOOT_RX_LENGTH);
+        return mPacket2.mStatus;
     }
 }
 
@@ -238,11 +238,11 @@ DynamixelStatus DynamixelInterface::clear(
         uint8_t *params = (uint8_t *)malloc(params_size);
         memcpy(params, aTxBuf, aTxSize);
 
-        mPacket_v2 = DynamixelPacket_v2(aID, CLEAR_TX_LENGTH + aTxSize, INST_CLEAR, params, params_size);
+        mPacket2 = DynamixelPacket2(aID, CLEAR_TX_LENGTH + aTxSize, INST_CLEAR, params, params_size);
 
-        transaction_v2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, CLEAR_RX_LENGTH);
+        transaction2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, CLEAR_RX_LENGTH);
         free(params);
-        return mPacket_v2.mStatus;
+        return mPacket2.mStatus;
     }
 }
 
@@ -266,11 +266,11 @@ DynamixelStatus DynamixelInterface::backup(
         uint8_t *params = (uint8_t *)malloc(params_size);
         memcpy(params, aTxBuf, aTxSize);
 
-        mPacket_v2 = DynamixelPacket_v2(aID, BACKUP_TX_LENGTH + aTxSize, INST_BACKUP, params, params_size);
+        mPacket2 = DynamixelPacket2(aID, BACKUP_TX_LENGTH + aTxSize, INST_BACKUP, params, params_size);
 
-        transaction_v2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, BACKUP_RX_LENGTH);
+        transaction2(aStatusReturnLevel > 0 && aID != BROADCAST_ID, BACKUP_RX_LENGTH);
         free(params);
-        return mPacket_v2.mStatus;
+        return mPacket2.mStatus;
     }
 }
 
@@ -301,25 +301,25 @@ DynamixelStatus DynamixelInterface::syncRead(
         params[3] = (DXL_HIBYTE(aSize));
         memcpy(&params[SYNC_READ_TX_PARAMS_LEN], aID, nID);
 
-        mPacket_v2 = DynamixelPacket_v2(BROADCAST_ID, SYNC_READ_TX_LENGTH + nID, INST_SYNC_READ, params, params_size);
+        mPacket2 = DynamixelPacket2(BROADCAST_ID, SYNC_READ_TX_LENGTH + nID, INST_SYNC_READ, params, params_size);
 
         prepareTransaction();
 
-        sendPacket_v2(mPacket_v2);
+        sendPacket2(mPacket2);
 
         for (size_t i = 0; i < nID; i++)
         {
-            DynamixelPacket_v2 xxx = DynamixelPacket_v2(aID[i], 0, 0);
+            DynamixelPacket2 xxx = DynamixelPacket2(aID[i], 0, 0);
 
             xxx.mRxDataLength = aSize;
             xxx.mRxData = &aRxBuf[i * aSize];
 
-            receivePacket_v2(xxx, SYNC_READ_RX_LENGTH + aSize);
+            receivePacket2(xxx, SYNC_READ_RX_LENGTH + aSize);
         }
     
         endTransaction();
         free(params);
-        return mPacket_v2.mStatus;
+        return mPacket2.mStatus;
 
     }
 
@@ -358,11 +358,11 @@ DynamixelStatus DynamixelInterface::syncWrite(
             memcpy(&params[SYNC_WRITE_TX_PARAMS_LEN + i * offset + 1], &aTxBuf[i * aSize],  aSize);
         }
         
-        mPacket_v2 = DynamixelPacket_v2(BROADCAST_ID, SYNC_WRITE_TX_PARAMS_LEN + nID * aSize, INST_SYNC_WRITE, params, params_size);
+        mPacket2 = DynamixelPacket2(BROADCAST_ID, SYNC_WRITE_TX_PARAMS_LEN + nID * aSize, INST_SYNC_WRITE, params, params_size);
 
-        transaction_v2(false);
+        transaction2(false);
         free(params);
-        return mPacket_v2.mStatus;
+        return mPacket2.mStatus;
 
     }
 
@@ -395,17 +395,17 @@ DynamixelStatus DynamixelInterface::fastSyncRead(
 
         memcpy(&params[FAST_SYNC_READ_TX_PARAMS_LEN], aID, nID);
 
-        mPacket_v2 = DynamixelPacket_v2(0xFE, FAST_SYNC_READ_TX_LENGTH + nID, INST_FAST_SYNK_READ, params, params_size);
+        mPacket2 = DynamixelPacket2(0xFE, FAST_SYNC_READ_TX_LENGTH + nID, INST_FAST_SYNK_READ, params, params_size);
 
         prepareTransaction();
-        sendPacket_v2(mPacket_v2);
-        uint8_t temp_status = mPacket_v2.mStatus;
+        sendPacket2(mPacket2);
+        uint8_t temp_status = mPacket2.mStatus;
 
         for (size_t i = 0; i < nID; i++)
         {   
-            mPacket_v2.mRxDataLength = aSize;
-            mPacket_v2.mRxData = &aRxBuf[i * aSize];
-            receivePacket_v2(mPacket_v2, 0, RECEIVE_FAST);
+            mPacket2.mRxDataLength = aSize;
+            mPacket2.mRxData = &aRxBuf[i * aSize];
+            receivePacket2(mPacket2, 0, RECEIVE_FAST);
         }
         
         endTransaction();
@@ -430,21 +430,21 @@ DynamixelStatus DynamixelInterface::bulkRead(
     }
     else
     {
-        mPacket_v2 = DynamixelPacket_v2(BROADCAST_ID, BULK_READ_TX_LENGTH + aSize, INST_BULK_READ, aTxBuf, aSize);
+        mPacket2 = DynamixelPacket2(BROADCAST_ID, BULK_READ_TX_LENGTH + aSize, INST_BULK_READ, aTxBuf, aSize);
         prepareTransaction();
-        sendPacket_v2(mPacket_v2);
+        sendPacket2(mPacket2);
         uint8_t temp_status;
 
         uint16_t rx_offset = 0;
         for (size_t i = 0; i < nID; i++)
         {
-            mPacket_v2.mID = aTxBuf[i * 5];
-            mPacket_v2.mRxDataLength = aTxBuf[1 + 5 * i] | (aTxBuf[2 + 5 * i] << 8);
-            mPacket_v2.mRxData = &aRxBuf[rx_offset];
-            rx_offset = rx_offset + mPacket_v2.mRxDataLength;
+            mPacket2.mID = aTxBuf[i * 5];
+            mPacket2.mRxDataLength = aTxBuf[1 + 5 * i] | (aTxBuf[2 + 5 * i] << 8);
+            mPacket2.mRxData = &aRxBuf[rx_offset];
+            rx_offset = rx_offset + mPacket2.mRxDataLength;
 
-            receivePacket_v2(mPacket_v2, BULK_READ_RX_LENGTH + mPacket_v2.mRxDataLength);
-            temp_status = temp_status | mPacket_v2.mStatus;
+            receivePacket2(mPacket2, BULK_READ_RX_LENGTH + mPacket2.mRxDataLength);
+            temp_status = temp_status | mPacket2.mStatus;
         }
     
         endTransaction();
@@ -470,9 +470,9 @@ DynamixelStatus DynamixelInterface::bulkWrite(
     }
     else
     {
-        mPacket_v2 = DynamixelPacket_v2(BROADCAST_ID, BULK_WRITE_TX_LENGTH + aTxSize, INST_BULK_WRITE, aTxBuf, aTxSize);
-        transaction_v2(false);
-        return mPacket_v2.mStatus;
+        mPacket2 = DynamixelPacket2(BROADCAST_ID, BULK_WRITE_TX_LENGTH + aTxSize, INST_BULK_WRITE, aTxBuf, aTxSize);
+        transaction2(false);
+        return mPacket2.mStatus;
     }
 
 }

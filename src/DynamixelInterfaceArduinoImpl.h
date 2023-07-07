@@ -2,7 +2,7 @@
 #ifndef DYNAMIXEL_INTERFACE_IMPL_H
 #define DYNAMIXEL_INTERFACE_IMPL_H
 
-#include "DynamixelInterface_v2.h"
+#include "DynamixelInterface2.h"
 #include <Arduino.h>
 //#include <SoftwareSerial.h>
 
@@ -70,7 +70,7 @@ public:
      *
      * The function wait for the packet to be completly sent (using Stream.flush)
      */
-    void sendPacket_v2(DynamixelPacket_v2 &aPacket);
+    void sendPacket2(DynamixelPacket2 &aPacket);
 
     /**
      * \brief Receive a packet on bus
@@ -92,7 +92,7 @@ public:
      * Timeout depends of timeout of the underlying stream.
      * Return error code in case of communication error (timeout, checksum error, ...)
      */
-    void receivePacket_v2(DynamixelPacket_v2 &aPacket, uint16_t answerSize = 0 , uint8_t mode = RECEIVE_NORMAL);
+    void receivePacket2(DynamixelPacket2 &aPacket, uint16_t answerSize = 0 , uint8_t mode = RECEIVE_NORMAL);
 
     /**
      * \brief Stop interface

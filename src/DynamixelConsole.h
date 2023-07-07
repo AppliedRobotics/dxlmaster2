@@ -1,7 +1,7 @@
 #ifndef DYNAMIXEL_CONSOLE_H
 #define DYNAMIXEL_CONSOLE_H
 
-#include "DynamixelInterface_v2.h"
+#include "DynamixelInterface2.h"
 
 extern HardwareDynamixelInterface DxlMaster;
 

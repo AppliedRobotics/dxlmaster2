@@ -15,12 +15,20 @@
 #	endif
 #endif //__AVR__
 
-#if __AVR__
+// Set UART direction pins so that serial port messages and other devices on line do not interfere
+#if defined(__AVR_ATmega2560__)
 #	ifndef DXL_DIR_TXD_PIN
 #		define DXL_DIR_TXD_PIN 42
 #	endif
 #	ifndef DXL_DIR_RXD_PIN
 #		define DXL_DIR_RXD_PIN 43
+#	endif
+#elif defined(__AVR_ATmega328P__)
+#	ifndef DXL_DIR_TXD_PIN
+#		define DXL_DIR_TXD_PIN 2
+#	endif
+#	ifndef DXL_DIR_RXD_PIN
+#		define DXL_DIR_RXD_PIN 2
 #	endif
 #elif defined(ESP32)
 #	ifndef DXL_DIR_TXD_PIN
@@ -31,10 +39,12 @@
 #	endif
 #endif
 
-#if __AVR__
-HardwareDynamixelInterface DxlMaster(Serial1);
+#if defined (__AVR_ATmega2560__)
+	HardwareDynamixelInterface DxlMaster(Serial1);
 #elif defined(ESP32)
-HardwareDynamixelInterface DxlMaster(Serial);
+    HardwareDynamixelInterface DxlMaster(Serial);
+#elif defined(__AVR_ATmega328P__)
+	HardwareDynamixelInterface DxlMaster(Serial);
 #endif
 
 template<class T>
@@ -43,13 +53,13 @@ void DynamixelInterfaceImpl<T>::readMode()
 #if DXL_DIR_TXD_PIN != DXL_DIR_RXD_PIN
 	digitalWrite(DXL_DIR_TXD_PIN, LOW);
 #endif
-	digitalWrite(DXL_DIR_RXD_PIN, HIGH);
+	digitalWrite(DXL_DIR_RXD_PIN, LOW);
 }
 	
 template<class T>
 void DynamixelInterfaceImpl<T>::writeMode()
 {
-	digitalWrite(DXL_DIR_RXD_PIN, LOW);
+	digitalWrite(DXL_DIR_RXD_PIN, HIGH);
 #if DXL_DIR_TXD_PIN != DXL_DIR_RXD_PIN
 	digitalWrite(DXL_DIR_TXD_PIN, HIGH);
 #endif
@@ -150,7 +160,7 @@ void DynamixelInterfaceImpl<T>::sendPacket(const DynamixelPacket &aPacket)
 }
 
 template<class T>
-void DynamixelInterfaceImpl<T>::sendPacket_v2(DynamixelPacket_v2 &aPacket)
+void DynamixelInterfaceImpl<T>::sendPacket2(DynamixelPacket2 &aPacket)
 {
 	mStream.flush();
 	writeMode();
@@ -223,7 +233,7 @@ void DynamixelInterfaceImpl<T>::receivePacket(DynamixelPacket &aPacket, uint8_t 
 }
 
 template <class T>
-void DynamixelInterfaceImpl<T>::receivePacket_v2(DynamixelPacket_v2 &aPacket, uint16_t answerSize, uint8_t mode)
+void DynamixelInterfaceImpl<T>::receivePacket2(DynamixelPacket2 &aPacket, uint16_t answerSize, uint8_t mode)
 {   
     uint8_t buffer[RX_HEAD_BUFF] = {0};
     aPacket.mCheckSum = 0;

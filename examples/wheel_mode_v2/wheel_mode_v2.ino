@@ -1,6 +1,6 @@
 // Test motor wheel mode
 
-#include "DxlMaster_v2.h"
+#include "DxlMaster2.h"
 
 // id of the motor
 const uint8_t id = 1;

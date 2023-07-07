@@ -5,7 +5,7 @@
 #ifndef DYNAMIXELDEVICE_H_
 #define DYNAMIXELDEVICE_H_
 
-#include "DynamixelInterface_v2.h"
+#include "DynamixelInterface2.h"
 #include <HardwareSerial.h>
 
 extern HardwareDynamixelInterface DxlMaster;

@@ -148,7 +148,7 @@ enum DynInstruction
 /**
  * \brief Dynamixel intruction values for V2
 */
-enum DynInstruction_v2
+enum DynInstruction2
 {
 	INST_PING		    = 0x01,
 	INST_READ		    = 0x02,
@@ -392,13 +392,13 @@ struct DynamixelPacket
  * \struct DynamixelPacket Protocol 2.0
  * \brief Struct of a dynamixel packet (instruction or status)
 */
-struct DynamixelPacket_v2
+struct DynamixelPacket2
 {
-	DynamixelPacket_v2(){}
+	DynamixelPacket2(){}
     
 	/* note : allow to constuct from const data, but const_cast it 
        (constness should be respected if code is correct) */
-    DynamixelPacket_v2(
+    DynamixelPacket2(
         uint8_t aID,
         uint16_t aLength,
         uint8_t aInstruction,

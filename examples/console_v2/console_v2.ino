@@ -1,4 +1,4 @@
-#include <DxlMaster_v2.h>
+#include <DxlMaster2.h>
 
 const unsigned long dynamixel_baudrate = 57600;
 const unsigned long serial_baudrate = 57600;

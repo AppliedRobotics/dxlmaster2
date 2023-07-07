@@ -12,16 +12,16 @@ class DynamixelInterface
 public:
     virtual void begin(unsigned long aBaud) = 0;
     virtual void sendPacket(const DynamixelPacket &aPacket) = 0;
-    virtual void sendPacket_v2(DynamixelPacket_v2 &aPacket) = 0;
+    virtual void sendPacket2(DynamixelPacket2 &aPacket) = 0;
     virtual void receivePacket(DynamixelPacket &aPacket, uint8_t answerSize = 0) = 0;
-    virtual void receivePacket_v2(DynamixelPacket_v2 &aPacket, uint16_t answerSize = 0, uint8_t mode = 0) = 0;
+    virtual void receivePacket2(DynamixelPacket2 &aPacket, uint16_t answerSize = 0, uint8_t mode = 0) = 0;
     virtual void prepareTransaction() = 0;
     virtual void endTransaction() = 0;
     virtual void end() = 0;
 
     void transaction(bool aExpectStatus, uint8_t answerSize = 0);
-    void transaction_v2(bool aExpectStatus, uint16_t answerSize = 0);
-    void transaction_v2_loop(uint16_t count, uint16_t answerSize);
+    void transaction2(bool aExpectStatus, uint16_t answerSize = 0);
+    void transaction2_loop(uint16_t count, uint16_t answerSize);
 
     template <class T>
     inline DynamixelStatus read(uint8_t aVer, uint8_t aID,  uint16_t aAddress, T &aData, uint8_t aStatusReturnLevel = 2);
@@ -52,7 +52,7 @@ public:
 
 private:
     DynamixelPacket mPacket;
-    DynamixelPacket_v2 mPacket_v2;
+    DynamixelPacket2 mPacket2;
 };
 
 
