@@ -53,13 +53,13 @@ void DynamixelInterfaceImpl<T>::readMode()
 #if DXL_DIR_TXD_PIN != DXL_DIR_RXD_PIN
 	digitalWrite(DXL_DIR_TXD_PIN, LOW);
 #endif
-	digitalWrite(DXL_DIR_RXD_PIN, LOW);
+	digitalWrite(DXL_DIR_RXD_PIN, HIGH);
 }
 	
 template<class T>
 void DynamixelInterfaceImpl<T>::writeMode()
 {
-	digitalWrite(DXL_DIR_RXD_PIN, HIGH);
+	digitalWrite(DXL_DIR_RXD_PIN, LOW);
 #if DXL_DIR_TXD_PIN != DXL_DIR_RXD_PIN
 	digitalWrite(DXL_DIR_TXD_PIN, HIGH);
 #endif
