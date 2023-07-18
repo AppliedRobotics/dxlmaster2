@@ -47,7 +47,7 @@ void DynamixelMotor::goalPosition(uint16_t aPosition)
     if (mVer == DYN_PROTOCOL_V1) 
         write(DYN_ADDRESS_GOAL_POSITION, aPosition);
     else
-        write(DYN2_ADDR_GOAL_SPEED, aPosition);
+        write(DYN2_ADDR_GOAL_POSITION, aPosition);
     
 }
 
