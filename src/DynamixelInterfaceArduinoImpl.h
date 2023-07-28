@@ -41,6 +41,12 @@ public:
     void begin(unsigned long aBaud);
 
     /**
+     * \brief Change timeOut
+     * \param[in] timeOut : ms
+     */
+    void setTimeOut(uint16_t timeOut);
+
+    /**
      * \brief Hardware specific preparations before transaction
      *
      * Reinit interface for dynamixel (flush, set baudrate)

@@ -95,6 +95,12 @@ void DynamixelInterfaceImpl<T>::begin(unsigned long aBaud)
     readMode();
 }
 
+template <class T>
+void DynamixelInterfaceImpl<T>::setTimeOut(uint16_t timeOut)
+{
+    mStream.setTimeout(timeOut);
+}
+
 template<class T>
 void DynamixelInterfaceImpl<T>::prepareTransaction()
 {
