@@ -10,7 +10,10 @@
 class DynamixelInterface
 {
 public:
-    virtual void begin(unsigned long aBaud) = 0;
+    virtual void begin(unsigned long aBaud,
+						void *aStreamCustom,
+						uint8_t aTxDirCustom,
+						uint8_t aRxDirCustom)=0;
     virtual void sendPacket(const DynamixelPacket &aPacket) = 0;
     virtual void sendPacket2(DynamixelPacket2 &aPacket) = 0;
     virtual void receivePacket(DynamixelPacket &aPacket, uint8_t answerSize = 0) = 0;

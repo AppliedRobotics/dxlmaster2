@@ -15,63 +15,34 @@
 #	endif
 #endif //__AVR__
 
-// Set UART direction pins so that serial port messages and other devices on line do not interfere
-#if defined(__AVR_ATmega2560__)
-#	ifndef DXL_DIR_TXD_PIN
-#		define DXL_DIR_TXD_PIN 42
-#	endif
-#	ifndef DXL_DIR_RXD_PIN
-#		define DXL_DIR_RXD_PIN 43
-#	endif
-#elif defined(__AVR_ATmega328P__)
-#	ifndef DXL_DIR_TXD_PIN
-#		define DXL_DIR_TXD_PIN 2
-#	endif
-#	ifndef DXL_DIR_RXD_PIN
-#		define DXL_DIR_RXD_PIN 2
-#	endif
-#elif defined(ESP32)
-#	ifndef DXL_DIR_TXD_PIN
-#		define DXL_DIR_TXD_PIN 5
-#	endif
-#	ifndef DXL_DIR_RXD_PIN
-#		define DXL_DIR_RXD_PIN 5
-#	endif
-#endif
-
-#if defined (__AVR_ATmega2560__)
-	HardwareDynamixelInterface DxlMaster(Serial1);
-#elif defined(ESP32)
-    HardwareDynamixelInterface DxlMaster(Serial);
-#elif defined(__AVR_ATmega328P__)
-	HardwareDynamixelInterface DxlMaster(Serial);
-#endif
+HardwareDynamixelInterface DxlMaster(&DXL_SERIAL_PORT);
 
 template<class T>
 void DynamixelInterfaceImpl<T>::readMode()
 {
-#if DXL_DIR_TXD_PIN != DXL_DIR_RXD_PIN
-	digitalWrite(DXL_DIR_TXD_PIN, LOW);
-#endif
-	digitalWrite(DXL_DIR_RXD_PIN, HIGH);
+    if (mTxDirPin != mRxDirPin)
+    	digitalWrite(mTxDirPin, LOW);	
+    digitalWrite(mRxDirPin, LOW);
 }
 	
 template<class T>
 void DynamixelInterfaceImpl<T>::writeMode()
 {
-	digitalWrite(DXL_DIR_RXD_PIN, LOW);
-#if DXL_DIR_TXD_PIN != DXL_DIR_RXD_PIN
-	digitalWrite(DXL_DIR_TXD_PIN, HIGH);
-#endif
+	digitalWrite(mRxDirPin, HIGH);
+	if (mTxDirPin != mRxDirPin)
+		digitalWrite(mTxDirPin, HIGH);
 }
 	
 template<class T>
-DynamixelInterfaceImpl<T>::DynamixelInterfaceImpl(T &aStream, uint8_t aTxPin):
+DynamixelInterfaceImpl<T>::DynamixelInterfaceImpl(T *aStream, uint8_t aTxPin):
 	mStream(aStream), mTxPin(aTxPin)
 {
+	mTxDirPin = DXL_DIR_TXD_PIN;
+	mRxDirPin = DXL_DIR_RXD_PIN; 
+
 	readMode();
-	pinMode(DXL_DIR_TXD_PIN, OUTPUT);
-	pinMode(DXL_DIR_RXD_PIN, OUTPUT);
+	pinMode(mTxDirPin, OUTPUT);
+	pinMode(mRxDirPin, OUTPUT);
 }
 
 template <class T>
@@ -79,34 +50,53 @@ DynamixelInterfaceImpl<T>::~DynamixelInterfaceImpl()
 {
 }
 
-template <class T>
-void DynamixelInterfaceImpl<T>::begin(unsigned long aBaud)
+template<class T>
+void DynamixelInterfaceImpl<T>::begin(unsigned long aBaud, 
+										void *aStreamCustom,
+										uint8_t aTxDirCustom,
+										uint8_t aRxDirCustom)
 {
+    if (aTxDirCustom != mTxDirPin)
+	{
+		pinMode(mTxDirPin, INPUT);
+		mTxDirPin = aTxDirCustom;
+		pinMode(mTxDirPin, OUTPUT);
+	}
+	if (aRxDirCustom != mRxDirPin)
+	{
+		pinMode(mRxDirPin, INPUT);
+		mRxDirPin = aRxDirCustom;
+		pinMode(mRxDirPin, OUTPUT);
+	}
+
+	if (aStreamCustom != mStream)
+		mStream = (T *)aStreamCustom;
+
 #if defined(ESP32)
-    mStream.begin(115200);
+    mStream->begin(115200);
 #else
-    mStream.begin(aBaud);
+    mStream->begin(aBaud);
 #endif
 
-    // mStream.write(0);
+    // mStream->write(0);
     // Serial.println("Hello");
     baud = aBaud;
-    mStream.setTimeout(3); // warning : response delay seems much higher than expected for some operation (eg writing eeprom)
+    mStream->setTimeout(3); // warning : response delay seems much higher than expected for some operation (eg writing eeprom)
     readMode();
 }
 
 template <class T>
 void DynamixelInterfaceImpl<T>::setTimeOut(uint16_t timeOut)
 {
-    mStream.setTimeout(timeOut);
+    mStream->setTimeout(timeOut);
 }
 
 template<class T>
 void DynamixelInterfaceImpl<T>::prepareTransaction()
 {
 #if defined(ESP32)
-	mStream.flush();
-	mStream.updateBaudRate(baud);
+	mStream->flush();
+	mStream->updateBaudRate(baud);
 #endif
 }
 
@@ -114,74 +104,74 @@ template<class T>
 void DynamixelInterfaceImpl<T>::endTransaction()
 {
 #if defined(ESP32)
-	mStream.flush();
-	mStream.updateBaudRate(115200);
+	mStream->flush();
+	mStream->updateBaudRate(115200);
 #endif
 }
 
 template <class T>
 void DynamixelInterfaceImpl<T>::sendPacket(const DynamixelPacket &aPacket)
 {
-    mStream.flush();
+    mStream->flush();
     writeMode();
     // empty receive buffer, in case of a error in previous transaction
-    while (mStream.available())
-        mStream.read();
-    mStream.write(0xFF);
-    mStream.write(0xFF);
-    mStream.write(aPacket.mID);
-    mStream.write(aPacket.mLength);
-    mStream.write(aPacket.mInstruction);
+    while (mStream->available())
+        mStream->read();
+    mStream->write(0xFF);
+    mStream->write(0xFF);
+    mStream->write(aPacket.mID);
+    mStream->write(aPacket.mLength);
+    mStream->write(aPacket.mInstruction);
     uint8_t n = 0;
     if (aPacket.mAddress != 255)
     {
-        mStream.write(aPacket.mAddress);
+        mStream->write(aPacket.mAddress);
         ++n;
     }
     if (aPacket.mDataLength != 255)
     {
-        mStream.write(aPacket.mDataLength);
+        mStream->write(aPacket.mDataLength);
         ++n;
     }
     if (aPacket.mLength > (n + 2U))
     {
         if (aPacket.mIDListSize == 0)
         {
-            mStream.write(aPacket.mData, aPacket.mLength - 2 - n);
+            mStream->write(aPacket.mData, aPacket.mLength - 2 - n);
         }
         else
         {
             uint8_t *ptr = aPacket.mData;
             for (uint8_t i = 0; i < aPacket.mIDListSize; ++i)
             {
-                mStream.write(aPacket.mIDList[i]);
-                mStream.write(ptr, aPacket.mDataLength);
+                mStream->write(aPacket.mIDList[i]);
+                mStream->write(ptr, aPacket.mDataLength);
                 ptr += aPacket.mDataLength;
             }
         }
     }
-    mStream.write(aPacket.mCheckSum);
-    mStream.flush();
+    mStream->write(aPacket.mCheckSum);
+    mStream->flush();
     readMode();
 }
 
 template<class T>
 void DynamixelInterfaceImpl<T>::sendPacket2(DynamixelPacket2 &aPacket)
 {
-	mStream.flush();
+	mStream->flush();
 	writeMode();
 
 	// empty receive buffer, in case of a error in previous transaction
-	while(mStream.available()) {
-		mStream.read();
+	while(mStream->available()) {
+		mStream->read();
     }
 
-    mStream.write(aPacket.mHead, HEAD_LEN);
-    mStream.write(aPacket.mParams, aPacket.mParamSize);
-    mStream.write(DXL_LOBYTE(aPacket.mCheckSum));
-    mStream.write(DXL_HIBYTE(aPacket.mCheckSum));
+    mStream->write(aPacket.mHead, HEAD_LEN);
+    mStream->write(aPacket.mParams, aPacket.mParamSize);
+    mStream->write(DXL_LOBYTE(aPacket.mCheckSum));
+    mStream->write(DXL_HIBYTE(aPacket.mCheckSum));
 
-	mStream.flush();
+	mStream->flush();
    
 	readMode();
 }
@@ -194,7 +184,7 @@ void DynamixelInterfaceImpl<T>::receivePacket(DynamixelPacket &aPacket, uint8_t 
     aPacket.mIDListSize = 0;
     aPacket.mAddress = 255;
     aPacket.mDataLength = 255;
-    if (mStream.readBytes(buffer, 2) < 2)
+    if (mStream->readBytes(buffer, 2) < 2)
     {
         aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
         return;
@@ -204,7 +194,7 @@ void DynamixelInterfaceImpl<T>::receivePacket(DynamixelPacket &aPacket, uint8_t 
         aPacket.mStatus = DYN_STATUS_COM_ERROR;
         return;
     }
-    if (mStream.readBytes(buffer, 3) < 3)
+    if (mStream->readBytes(buffer, 3) < 3)
     {
         aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
         return;
@@ -222,12 +212,12 @@ void DynamixelInterfaceImpl<T>::receivePacket(DynamixelPacket &aPacket, uint8_t 
     }
     aPacket.mStatus = buffer[2];
     if (aPacket.mLength > 2 
-        && (int)mStream.readBytes(reinterpret_cast<char *>(aPacket.mData), aPacket.mLength - 2) < (int)(aPacket.mLength - 2))
+        && (int)mStream->readBytes(reinterpret_cast<char *>(aPacket.mData), aPacket.mLength - 2) < (int)(aPacket.mLength - 2))
     {
         aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
         return;
     }
-    if (mStream.readBytes(reinterpret_cast<char *>(&(aPacket.mCheckSum)), 1) < 1)
+    if (mStream->readBytes(reinterpret_cast<char *>(&(aPacket.mCheckSum)), 1) < 1)
     {
         aPacket.mStatus = DYN_STATUS_COM_ERROR | DYN_STATUS_TIMEOUT;
         return;
@@ -246,7 +236,7 @@ void DynamixelInterfaceImpl<T>::receivePacket2(DynamixelPacket2 &aPacket, uint16
 
     if (mode != RECEIVE_FAST)
     {
-        if (mStream.readBytes(buffer, RX_HEAD_BUFF) < RX_HEAD_BUFF)
+        if (mStream->readBytes(buffer, RX_HEAD_BUFF) < RX_HEAD_BUFF)
         {
             aPacket.mStatus = DYN2_STATUS_TIMEOUT;
             return;
@@ -282,7 +272,7 @@ void DynamixelInterfaceImpl<T>::receivePacket2(DynamixelPacket2 &aPacket, uint16
 
 
     // Read Err field
-    if (mStream.readBytes(buffer, ERR_LEN) < ERR_LEN) 
+    if (mStream->readBytes(buffer, ERR_LEN) < ERR_LEN) 
     {
         aPacket.mStatus = DYN2_STATUS_TIMEOUT_ERR;
         return;
@@ -293,7 +283,7 @@ void DynamixelInterfaceImpl<T>::receivePacket2(DynamixelPacket2 &aPacket, uint16
 
 
     /* Read Data fields*/
-    if (mStream.readBytes(aPacket.mRxData, aPacket.mRxDataLength) < aPacket.mRxDataLength)
+    if (mStream->readBytes(aPacket.mRxData, aPacket.mRxDataLength) < aPacket.mRxDataLength)
     {
         aPacket.mStatus = DYN2_STATUS_TIMEOUT_DATA;
         return;
@@ -302,7 +292,7 @@ void DynamixelInterfaceImpl<T>::receivePacket2(DynamixelPacket2 &aPacket, uint16
     aPacket.mCheckSum = aPacket.updateCRC(aPacket.mCheckSum, aPacket.mRxData, aPacket.mRxDataLength);
 
     
-    if (mStream.readBytes(buffer, CRC_LEN) < CRC_LEN)
+    if (mStream->readBytes(buffer, CRC_LEN) < CRC_LEN)
     {
         aPacket.mStatus = DYN2_STATUS_TIMEOUT_CRC;
         return;
@@ -320,7 +310,7 @@ void DynamixelInterfaceImpl<T>::receivePacket2(DynamixelPacket2 &aPacket, uint16
 template<class T>
 void DynamixelInterfaceImpl<T>::end()
 {
-	mStream.end();
+	mStream->end();
 }
 
 template class DynamixelInterfaceImpl<HardwareSerial>;
@@ -349,8 +339,8 @@ uint8_t TxPinFromHardwareSerial(const HardwareSerial &aSerial)
 }
 
 
-HardwareDynamixelInterface::HardwareDynamixelInterface(HardwareSerial &aSerial):
-	DynamixelInterfaceImpl(aSerial, TxPinFromHardwareSerial(aSerial))
+HardwareDynamixelInterface::HardwareDynamixelInterface(HardwareSerial *aSerial):
+	DynamixelInterfaceImpl(aSerial, TxPinFromHardwareSerial(*aSerial))
 {}
 
 HardwareDynamixelInterface::~HardwareDynamixelInterface()
