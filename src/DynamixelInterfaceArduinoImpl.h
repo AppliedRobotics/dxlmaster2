@@ -87,9 +87,9 @@ public:
 	 * Start the interface with desired baudrate, call once before using the interface
 	*/
 	void begin(unsigned long aBaud,
-				void *aStreamCustom = &DXL_SERIAL_PORT,
-				uint8_t aTxDirCustom = DXL_DIR_TXD_PIN, 
-				uint8_t aRxDirCustom = DXL_DIR_RXD_PIN);
+				void *aStream = &DXL_SERIAL_PORT,
+				uint8_t aTxDirPin = DXL_DIR_TXD_PIN, 
+				uint8_t aRxDirPin = DXL_DIR_RXD_PIN);
 
     /**
      * \brief Change timeOut

@@ -1,4 +1,4 @@
-#include "DxlMaster2.h"
+#include <DxlMaster2.h>
 
 // This is a basic console that allow you to experiment easily with your servos 
 // and other Dynamixel devices from the arduino hardware serial terminal
@@ -13,10 +13,12 @@
 const unsigned long dynamixel_baudrate = 57600;
 const unsigned long serial_baudrate = 57600;
 
-DynamixelConsole console(Serial, 1);
+// This example uses Dynamixel 2.0 protocol
+DynamixelConsole console(Serial, 2);
 
 void setup() {
-  // Pass a pointer to HardwareSerial object to specify serial
+  // Pass a pointer to standard serial port Serial1 (HardwareSerial object) of Dynamixel interface 
+  // before custom Tx/Rx direction pins (These direction pins relate to TECHNOLAB ATmega2560 board)
   DxlMaster.begin(dynamixel_baudrate, &Serial1, 21, 20);
   Serial.begin(serial_baudrate);
 }

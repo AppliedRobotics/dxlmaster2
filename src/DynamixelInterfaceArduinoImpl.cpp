@@ -37,12 +37,10 @@ template<class T>
 DynamixelInterfaceImpl<T>::DynamixelInterfaceImpl(T *aStream, uint8_t aTxPin):
 	mStream(aStream), mTxPin(aTxPin)
 {
-	mTxDirPin = DXL_DIR_TXD_PIN;
-	mRxDirPin = DXL_DIR_RXD_PIN; 
-
-	readMode();
-	pinMode(mTxDirPin, OUTPUT);
-	pinMode(mRxDirPin, OUTPUT);
+	/*
+     * Tx/Rx DIR pins initialization was moved into begin() method
+     * to avoid unwanted changes on unused standard pins
+    */
 }
 
 template <class T>
@@ -52,25 +50,18 @@ DynamixelInterfaceImpl<T>::~DynamixelInterfaceImpl()
 
 template<class T>
 void DynamixelInterfaceImpl<T>::begin(unsigned long aBaud, 
-										void *aStreamCustom,
-										uint8_t aTxDirCustom,
-										uint8_t aRxDirCustom)
+										void *aStream,
+										uint8_t aTxDirPin,
+										uint8_t aRxDirPin)
 {
-    if (aTxDirCustom != mTxDirPin)
-	{
-		pinMode(mTxDirPin, INPUT);
-		mTxDirPin = aTxDirCustom;
-		pinMode(mTxDirPin, OUTPUT);
-	}
-	if (aRxDirCustom != mRxDirPin)
-	{
-		pinMode(mRxDirPin, INPUT);
-		mRxDirPin = aRxDirCustom;
-		pinMode(mRxDirPin, OUTPUT);
-	}
+    mTxDirPin = aTxDirPin;
+    mRxDirPin = aRxDirPin;
 
-	if (aStreamCustom != mStream)
-		mStream = (T *)aStreamCustom;
+    readMode();
+    pinMode(mTxDirPin, OUTPUT);
+	pinMode(mRxDirPin, OUTPUT);
+
+    mStream = (T *)aStream;
 
 #if defined(ESP32)
     mStream->begin(115200);
