@@ -3,8 +3,8 @@
 const unsigned long dynamixel_baudrate = 57600;
 const unsigned long serial_baudrate = 57600;
 
-// This example uses Dynamixel 2.0 protocol
-DynamixelConsole console(Serial, 2);
+// This example uses Dynamixel 1.0 protocol 
+DynamixelConsole console(Serial, 1);
 
 void setup() {
   // Serial port of Dynamixel interface is standard in this example (This default 

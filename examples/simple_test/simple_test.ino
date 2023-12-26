@@ -8,6 +8,7 @@
 #endif
 
 #define ADR_LED  65
+#define ADR_TORQUE  64
 
 #define ID_1  0x01
 DynamixelDevice device(ID_1);
@@ -82,7 +83,7 @@ void loop()
     // 3. Write ----------------------------------------------/
     Serial.print("3. Write: ");
     status = 0xFF;
-    //status = device.write(ADR_LED, led_state);
+    status = device.write(ADR_LED, led_state);
     if (status == DYN_STATUS_OK) {
         Serial.print("\tOk! LED = ");
         Serial.print(led_state);
@@ -97,7 +98,7 @@ void loop()
     // 4. Reg Write ----------------------------------------------/
     Serial.print("4. Reg Write ");
     status = 0xFF;
-    //status = device.regWrite(ADR_LED, led_state);
+    status = device.regWrite(ADR_LED, led_state);
     if (status == DYN_STATUS_OK) {
         Serial.print("\tOk!");
     }
@@ -117,7 +118,7 @@ void loop()
     // 6. Reset ----------------------------------------------/
     Serial.print("6. Reset: ");
     status = 0xFF;
-    //status = device.reset(0x02);
+    status = device.reset(0x02);
     if (status == DYN_STATUS_OK) {
         Serial.print("\tOk!");
     }
@@ -126,11 +127,11 @@ void loop()
     }
     Serial.print(" Status = ");
     Serial.println(status);
-
+    delay(400);
     // 7. Reboot ----------------------------------------------/
     Serial.print("7. Reboot: ");
     status = 0xFF;
-    //status = device.reboot();
+    status = device.reboot();
     if (status == DYN_STATUS_OK) {
         Serial.print("\tOk!");
     }
@@ -140,6 +141,7 @@ void loop()
     Serial.print(" Status = ");
     Serial.println(status);
 
+    delay(700);
     // 8. Clear ----------------------------------------------/
     Serial.print("8. Clear: ");
     status = 0xFF;
@@ -154,9 +156,13 @@ void loop()
     Serial.print(" Status = ");
     Serial.println(status);
 
+    delay(700);
     // 9. Backup ----------------------------------------------/
     Serial.print("9. Backup: ");
     status = 0xFF;
+
+    Serial.println();
+
     uint8_t restore[5] = {0x01, 0x43, 0x54, 0x52, 0x4c};
     status = device.backup(5, restore);
     if (status == DYN_STATUS_OK) {
@@ -165,9 +171,11 @@ void loop()
     else {
         Serial.print("\tErr!");
     }
+
     Serial.print(" Status = ");
     Serial.println(status);
 
+    delay(700);
     // 10. Sync Read ----------------------------------------------/
     Serial.print("10. Sync Read: ");
     status = 0xFF;
@@ -183,11 +191,12 @@ void loop()
     Serial.print(" Status = ");
     Serial.println(status);
 
+    delay(700);
     // 11. Sync Write ----------------------------------------------/
     Serial.print("11. Sync Write: ");
     status = 0xFF;
     uint8_t arr_id[1] = {1};
-//    status = device.syncWrite(1, arr_id, ADR_LED, 1, &led_state);
+   status = device.syncWrite(1, arr_id, ADR_LED, 1, &led_state);
     if (status == DYN_STATUS_OK) {
         Serial.print("\tOk! LED = ");
         Serial.print(led_state);
@@ -199,6 +208,7 @@ void loop()
     Serial.print(" Status = ");
     Serial.println(status);
 
+    delay(700);
     // 13. Bulk Read ----------------------------------------------/
     Serial.print("13. Bulk Read: ");
     status = 0xFF;
@@ -217,7 +227,7 @@ void loop()
     }
     Serial.print(" Status = ");
     Serial.println(status);
-    delay(50);
+    delay(700);
 
     // 14. Bulk Write ----------------------------------------------/
     Serial.print("14. Bulk Write: ");
@@ -233,7 +243,7 @@ void loop()
     }
     Serial.print(" Status = ");
     Serial.println(status);
-
+    // while(1);
     
     delay(5000);
 }

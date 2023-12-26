@@ -6,6 +6,51 @@
 #include <Arduino.h>
 //#include <SoftwareSerial.h>
 
+/* 
+ * Set UART direction pins so that serial port messages 
+ * and other devices on line do not interfere
+*/
+# if defined (__AVR_ATmega2560__)
+# 	ifndef DXL_DIR_TXD_PIN
+# 		define DXL_DIR_TXD_PIN 43
+# 	endif
+# 	ifndef DXL_DIR_RXD_PIN
+# 		define DXL_DIR_RXD_PIN 42
+# 	endif
+# elif defined (__AVR_ATmega328P__)
+# 	ifndef DXL_DIR_TXD_PIN
+# 		define DXL_DIR_TXD_PIN 2
+# 	endif
+# 	ifndef DXL_DIR_RXD_PIN
+# 		define DXL_DIR_RXD_PIN 2
+# 	endif
+# elif defined (ESP32)
+# 	ifndef DXL_DIR_TXD_PIN
+# 		define DXL_DIR_TXD_PIN 5
+# 	endif
+# 	ifndef DXL_DIR_RXD_PIN
+# 		define DXL_DIR_RXD_PIN 5
+# 	endif
+# endif
+
+/*
+ * Set serial port for Dynamixel interface
+*/
+
+# if defined (__AVR_ATmega2560__) 	
+#	ifndef DXL_SERIAL_PORT
+# 		define DXL_SERIAL_PORT Serial1
+# 	endif
+# elif defined (__AVR_ATmega328P__)
+#	ifndef DXL_SERIAL_PORT
+# 		define DXL_SERIAL_PORT Serial
+# 	endif
+# elif defined (ESP32)
+#	ifndef DXL_SERIAL_PORT
+# 		define DXL_SERIAL_PORT Serial
+# 	endif
+# endif
+
 template <class T>
 class DynamixelInterfaceImpl : public DynamixelInterface
 {
@@ -20,11 +65,11 @@ private:
 
 public:
     /**
-     * \brief Constructor
-     * \param[in] aStreamController : stream controller that abstract real stream
-     * \param[in] aTxPin : pin number of the tx pin
-     */
-    DynamixelInterfaceImpl(T &aStream, uint8_t aTxPin);
+	 * \brief Constructor
+	 * \param[in] aStream : Stream controller that abstract real stream
+	 * \param[in] aTxPin : Pin number of the Tx pin
+	*/
+	DynamixelInterfaceImpl(T *aStream, uint8_t aTxPin);
 
     /**
      * \brief Destructor
@@ -33,12 +78,18 @@ public:
     ~DynamixelInterfaceImpl();
 
     /**
-     * \brief Start interface
-     * \param[in] aBaud : Baudrate
-     *
-     * Start the interface with desired baudrate, call once before using the interface
-     */
-    void begin(unsigned long aBaud);
+	 * \brief Start interface
+	 * \param[in] aBaud : Baudrate
+	 * \param[in] aStreamCustom : Pointer to custom serial port instance for Dynamixel interface
+	 * \param[in] aTxDirCustom : Custom Tx DIR pin for Dynamixel interface
+	 * \param[in] aRxDirCustom : Custom Rx DIR pin for Dynamixel interface
+	 * 
+	 * Start the interface with desired baudrate, call once before using the interface
+	*/
+	void begin(unsigned long aBaud,
+				void *aStream = &DXL_SERIAL_PORT,
+				uint8_t aTxDirPin = DXL_DIR_TXD_PIN, 
+				uint8_t aRxDirPin = DXL_DIR_RXD_PIN);
 
     /**
      * \brief Change timeOut
@@ -108,7 +159,15 @@ public:
     static const uint8_t NO_DIR_PORT = 255;
 
 private:
-    T &mStream;
+    /* 
+	 * Changing serial stream reference to pointer for
+	 * making this stream changable in begin() method
+	*/
+	// T &mStream;
+	T *mStream;
+
+	uint8_t mTxDirPin;
+	uint8_t mRxDirPin;
 
 protected:
     const uint8_t mTxPin;
@@ -117,7 +176,7 @@ protected:
 class HardwareDynamixelInterface : public DynamixelInterfaceImpl<HardwareSerial>
 {
 public:
-    HardwareDynamixelInterface(HardwareSerial &aSerial);
+    HardwareDynamixelInterface(HardwareSerial *aSerial);
     ~HardwareDynamixelInterface();
 };
 
