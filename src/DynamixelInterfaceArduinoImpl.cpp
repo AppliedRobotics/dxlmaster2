@@ -22,13 +22,13 @@ void DynamixelInterfaceImpl<T>::readMode()
 {
     if (mTxDirPin != mRxDirPin)
     	digitalWrite(mTxDirPin, LOW);	
-    digitalWrite(mRxDirPin, LOW);
+    digitalWrite(mRxDirPin, HIGH);
 }
 	
 template<class T>
 void DynamixelInterfaceImpl<T>::writeMode()
 {
-	digitalWrite(mRxDirPin, HIGH);
+	digitalWrite(mRxDirPin, LOW);
 	if (mTxDirPin != mRxDirPin)
 		digitalWrite(mTxDirPin, HIGH);
 }
