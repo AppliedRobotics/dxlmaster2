@@ -31,6 +31,13 @@
 # 	ifndef DXL_DIR_RXD_PIN
 # 		define DXL_DIR_RXD_PIN 5
 # 	endif
+# elif defined (__OPENCM904__)
+#	ifndef DXL_DIR_TXD_PIN
+# 		define DXL_DIR_TXD_PIN 28
+# 	endif
+# 	ifndef DXL_DIR_RXD_PIN
+# 		define DXL_DIR_RXD_PIN 28
+# 	endif
 # endif
 
 /*
@@ -48,6 +55,10 @@
 # elif defined (ESP32)
 #	ifndef DXL_SERIAL_PORT
 # 		define DXL_SERIAL_PORT Serial
+# 	endif
+# elif defined (__OPENCM904__)
+#	ifndef DXL_SERIAL_PORT
+# 		define DXL_SERIAL_PORT Serial1
 # 	endif
 # endif
 
