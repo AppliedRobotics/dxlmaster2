@@ -21,16 +21,20 @@ template<class T>
 void DynamixelInterfaceImpl<T>::readMode()
 {
     if (mTxDirPin != mRxDirPin)
-    	digitalWrite(mTxDirPin, LOW);	
-    digitalWrite(mRxDirPin, LOW);
+    	digitalWrite(mTxDirPin, HIGH);
+    	// /*orig*/digitalWrite(mTxDirPin, LOW);	
+     // /*orig*/ digitalWrite(mRxDirPin, LOW);
+     digitalWrite(mRxDirPin, LOW);
 }
 	
 template<class T>
 void DynamixelInterfaceImpl<T>::writeMode()
 {
+	// /*orig*/ digitalWrite(mRxDirPin, HIGH);
 	digitalWrite(mRxDirPin, HIGH);
 	if (mTxDirPin != mRxDirPin)
-		digitalWrite(mTxDirPin, HIGH);
+		digitalWrite(mTxDirPin, LOW);
+		// /*orig*/ digitalWrite(mTxDirPin, HIGH);
 }
 	
 template<class T>
